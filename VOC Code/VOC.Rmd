@@ -1,0 +1,452 @@
+---
+title: "VOC"
+author: "Eli Haynal"
+date: "6/29/2023"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE,warnings=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE)
+```
+
+This code block imports the required libraries and defines a variety of
+functions that are useful later in the code.
+
+```{r, results = "hide",warnings=FALSE}
+
+list.of.packages <- c('data.table','ggplot2','scales','signal','cowplot','reticulate','stringr')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+# These statements import the libraries needed for the code to run
+library(data.table)  # A library for working with data frames efficiently
+library(ggplot2)  # A library for creating plots
+library(scales)  # A library for formatting plot axes
+library(signal)  # A library for signal processing
+library(cowplot)  # A library for arranging multiple plots
+library(reticulate) #A library for including python code blocks in an rmd file
+library(stringr) #A library for formatting strings
+
+
+#Define translucent colors to use when graphing overlapping data
+color1 <- rgb(0, 0, 1, alpha = 0.5)
+color2 <- rgb(1, 0.5, 0, alpha = 0.5)
+
+# A function to calculate the moving average of a vector of data
+mvavg <- function(dat, size) {
+  #a <- zoo::rollapply(dat, width = size, FUN = mean, align = "left", fill = NA)
+  a = c()
+  for (i in 1:(length(dat)-size)){
+    a = c(a,mean(dat[i:(i+size)]))
+  } 
+  return(a)
+}
+
+# A function for integration by the trapezoidal rule
+trap <- function(x, y) {
+  area <- sum((y[-length(y)] + y[-1]) / 2 * diff(x))
+  return(area)
+}
+
+#A function to find the mode of a list
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# A function that returns the x value such that the integral under
+# the curve from 0 to x is a specified proportion of the total area
+# under the curve
+area_under <- function(x, y, proportion) {
+  target <- proportion * trap(x, y)
+  i <- 3
+  while (trap(x[1:i], y[1:i]) > target) {
+    i <- i + 1
+  }
+  return(x[i])
+}
+
+```
+
+
+This code block defines the "signal" class and its related functions. Each
+instance of the signal class represents a single signal from the detector.
+```{r, results = "hide",warnings=FALSE}
+#Define the class and outline the variables each instance must contain
+signal <- setRefClass(
+  "signal",
+  fields = list(
+    x = "ANY",
+    y = "ANY",
+    max_val = "ANY",
+    max_x = "ANY",
+    t = "ANY",
+    n = "ANY",
+    f = "ANY",
+    risetime = "ANY",
+    falltime = "ANY",
+    tnrise = "ANY",
+    tnfall = "ANY",
+    avg_first_50 = "ANY",
+    name = "ANY"
+  ),
+#Define the methods that can be performed on the class.
+  methods = list(
+    initialize = function(infile, flip=FALSE)
+    {
+      "This method is called when you create an instance of the class."
+      dat = read.csv(infile,sep='\t')
+      dat = dat[2:nrow(dat),]
+      name <<- infile
+      const <- 1
+      if (flip) {
+        const <- -1
+      }
+            
+      x <<- as.numeric(dat[, 1])
+            
+      y <<- as.numeric(dat[, 2])
+      y <<- const * y
+      y[is.na(y)] <<- const * -300
+      y <<- y - 400
+      
+      max_val <<- min(y)
+      max_x <<- x[which.min(y)]
+            
+      n <- c()
+      i <- 1
+      while (y[i] > 0.9 * max_val) {
+        i <- i + 1
+      }
+      n <- c(n, i)
+      i <- length(y)
+      while (y[i] > 0.9 * max_val) {
+        i <- i - 1
+      }
+      n <<- c(n, i)
+      f <- c()
+      i <- 1
+      while (y[i] > 0.5 * max_val) {
+        i <- i + 1
+      }
+      f <- c(f, i)
+      i <- length(y)
+      while (y[i] > 0.5 * max_val) {
+        i <- i - 1
+      }
+      f <<- c(f, i)
+      t <- c()
+      i <- 1
+      while (y[i] > 0.1 * max_val) {
+        i <- i + 1
+      }
+      t <- c(t, i)
+      i <- length(y)
+      while (y[i] > 0.1 * max_val) {
+        i <- i - 1
+      }
+      t <<- c(t, i)
+      
+      risetime <<- max_x - x[t[1]]
+      falltime <<- x[t[2]] - max_x
+      tnrise <<- x[n[1]] - x[t[1]]
+      tnfall <<- x[t[2]] - x[n[2]]
+      avg_first_50 <<- mean(y[1:50])
+      
+      
+    },
+#This method plots an individual signal.
+    plot = function(.self)
+    {
+      plot(.self$x, .self$y, type = "l")
+      title(xlab = "Time", ylab = "Amplitude")
+    },
+#This method smooths an individual signal with a 10-point moving average and
+#recalculates statistics accordingly.
+    smooth = function(.self)
+    {
+      .self$y <- mvavg(.self$y,10)
+      .self$x <- .self$x[0:length(.self$y)]
+      .self$max_val <- min(.self$y)
+      max_val <- min(.self$y)
+      .self$max_x <- .self$x[which.min(.self$y)]
+      
+      n <- c()
+      i <- 1
+      while (.self$y[i] > 0.9 * .self$max_val) {
+        i <- i + 1
+      }
+      n <- c(n, i)
+      i <- length(.self$y)
+      while (.self$y[i] > 0.9 * .self$max_val) {
+        i <- i - 1
+      }
+      .self$n <- c(n, i)
+      f <- c()
+      i <- 1
+      while (.self$y[i] > 0.5 * .self$max_val) {
+        i <- i + 1
+      }
+      f <- c(f, i)
+      i <- length(.self$y)
+      while (.self$y[i] > 0.5 * .self$max_val) {
+        i <- i - 1
+      }
+      .self$f <- c(f, i)
+      t <- c()
+      i <- 1
+      while (.self$y[i] > 0.1 * .self$max_val) {
+        i <- i + 1
+      }
+      t <- c(t, i)
+      i <- length(.self$y)
+      while (.self$y[i] > 0.1 * .self$max_val) {
+        i <- i - 1
+      }
+      .self$t <- c(t, i)
+      
+      .self$risetime <- .self$max_x - .self$x[.self$t[1]]
+      .self$falltime <- .self$x[.self$t[2]] - .self$max_x
+      .self$tnrise <- .self$x[.self$n[1]] - .self$x[.self$t[1]]
+      .self$tnfall <- .self$x[.self$t[2]] - .self$x[.self$n[2]]
+      
+    },
+#The method calls the multi-peaked function out of the python codeblock
+#to determine if the signal has multiple peaks.
+    multi_peaked = function(.self)
+    {
+      temp = -1 * .self$y
+      peaks = findpeaks(temp,minpeakheight = 20, minpeakdistance = 50)
+      if (is.null(peaks)){
+        return(TRUE)
+      }
+      if (nrow(peaks)==1){
+        return(FALSE)
+      }
+      else{
+        return(TRUE)
+      }
+    }
+    )
+)
+```
+
+
+This codeblock defines the "run" class and its associated functions. Each
+instance of this class represents a single run on the detector composed of 
+many signal class objects.
+```{r, results = "hide",warnings=FALSE}
+#This defines the run class.
+run <- setRefClass(
+  "run",
+  fields = list(
+    signals = "ANY",
+    tens = "ANY",
+    fifties = "ANY",
+    nineties = "ANY",
+    risetime = "ANY",
+    falltime = "ANY",
+    tnrise = "ANY",
+    tnfall = "ANY",
+    amplitudes = "ANY",
+    fwidth = "ANY",
+    nwidth = "ANY",
+    narea = "ANY",
+    farea = "ANY",
+    name = "ANY"
+  ),
+  methods = list(
+#This method is called every time a run is created.
+  initialize = function(infolder, flip=FALSE){
+    .self$name = infolder
+    .self$signals = list()
+    file_names = list.files(infolder)
+    for (file_name in file_names){
+      file_path = file.path(infolder,file_name)
+      .self$signals[[length(.self$signals)+1]] =signal(file_path,flip=TRUE)
+    }
+  },
+#This method removes multi-peaked signals.
+  clean = function(.self){
+    temp = list()
+    for (i in 1:length(.self$signals)){
+      s = .self$signals[[i]]
+      if (!s$multi_peaked()){
+        temp[[length(temp)+1]] = s
+      }
+    }
+    .self$signals <- 0
+    .self$signals <- temp
+  },
+#This method smooths every signal in the run with a 10-point moving average
+  smooth = function(.self){
+    for (i in 1:length(.self$signals)){
+      .self$signals[[i]]$smooth()
+    }
+  },
+#This method finds the distribution of the average of the first 50 datapoints
+#for each signal, removes signals falling in the 5% tail of this distribution
+#and zeros the remaining signals according to the mode of the distribution.
+  avg_first_50 = function(.self){
+    reference = c()
+    for (i in 1:length(.self$signals)){
+      s = .self$signals[[i]]
+      val = s$avg_first_50
+      reference = c(reference,val)
+    }
+    reference = sort(reference)
+    removal_list = reference[1:as.integer(0.05*length(reference))]
+    temp = list()
+    baseline = Mode(reference)
+    for (i in 1:length(.self$signals)){
+      s = .self$signals[[i]]
+      if (!s$avg_first_50%in%removal_list){
+        for (i in 1:length(s$y)){
+          s$y[i] = s$y[i] - baseline
+        }
+        temp[[length(temp)+1]] = s
+      }
+    }
+    .self$signals = temp
+  },
+
+#This method calculations signal parameters from each signal in the run and
+#stores them in lists as attributes of the run.
+  make_stats = function(.self){
+    tens = c()
+    fifties = c()
+    nineties = c()
+    risetime = c()
+    falltime = c()
+    tnrise = c()
+    tnfall = c()
+    amplitudes = c()
+    fwidth = c()
+    nwidth = c()
+    narea = c()
+    farea = c()
+    for (i in 1:length(.self$signals)){
+      s = .self$signals[[i]]
+      a = s$max_val
+      r = s$risetime
+      f = s$falltime
+      tnr = s$tnrise
+      tnf = s$tnfall
+      nw = s$x[s$n[2]] - s$x[s$n[1]]
+      fw = s$x[s$f[2]] - s$x[s$f[1]]
+      nar = trap(s$x[s$n[1]:s$n[2]],s$y[s$n[1]:s$n[2]])
+      far = trap(s$x[s$f[1]:s$f[2]],s$y[s$f[1]:s$f[2]])
+      ten = area_under(s$x,s$y,0.1)
+      fifty = area_under(s$x,s$y,0.5)
+      ninety = area_under(s$x,s$y,0.9)
+      
+      amplitudes = c(amplitudes,a)
+      risetime = c(risetime,r)
+      falltime = c(falltime,f)
+      tnrise = c(tnrise,tnr)
+      tnfall = c(tnfall,tnf)
+      nwidth = c(nwidth,nw)
+      fwidth = c(fwidth,fw)
+      narea = c(narea,nar)
+      farea = c(farea,far)
+      tens = c(tens,ten)
+      fifties = c(fifties,fifty)
+      nineties = c(nineties,ninety)
+      
+    }
+    .self$amplitudes = amplitudes
+    .self$risetime = risetime
+    .self$falltime = falltime
+    .self$tnrise = tnrise
+    .self$tnfall = tnfall
+    .self$nwidth = nwidth
+    .self$fwidth = fwidth
+    .self$narea = narea
+    .self$farea = farea
+    .self$tens = tens
+    .self$fifties = fifties
+    .self$nineties = nineties
+  }
+  )
+)
+
+#This loads in two example folders of data (that must be in the same directory
+#as the R file) and processes them.
+prop = run('Prop0428',flip=TRUE)
+phen = run('Phen0428',flip=TRUE)
+prop$avg_first_50()
+phen$avg_first_50()
+prop$smooth()
+phen$smooth()
+prop$clean()
+phen$clean()
+prop$make_stats()
+phen$make_stats()
+#hist(prop$nineties,col="color1")
+#hist(phen$nineties,col="color2",add=TRUE)
+```
+
+
+This code block contains utilities for plotting data.
+```{r}
+caption_dict = c(
+	'nineties'='90% area time',
+	'fifties'='50% area time',
+	'tens'='10% area time',
+	'amplitudes'='Amplitude',
+	'nwidth'='Peak width at 90% amplitude',
+	'fwidth'='Peak width at 50% amplitude',
+	'narea'='Area between 90% amplitudes',
+	'farea'='Area between 50% amplitues',
+	'risetime'='Rise time (10% to peak)',
+	'falltime'='Fall time (peak to 10%)',
+	'tnrise'='Rise time (10% to 90%)',
+	'tnfall'='Fall time (90% to 10%)'
+)
+
+plot_average_signal <- function(run1){
+  series = c()
+  upper = c()
+  lower = c()
+  for (i in 1:length(run1$signals[[1]]$y)){
+    temp = c()
+    for (j in 1:length(run1$signals)){
+      s = run1$signals[[j]]
+      temp = c(temp,s$y[i])
+    }
+    m = mean(temp)
+    std = sd(temp)
+    series = c(series,m)
+    upper = c(upper,m+std)
+    lower = c(lower,m-std)
+  }
+  title = paste('Average signal with standard deviation bands for',run1$name)
+  plot(run1$signals[[1]]$x,series,col=color1,ylim=c(min(lower)-10,max(upper)+10),type='l',
+       main=title,xlab='Time (μs)',ylab='Adjusted voltage (mV)')
+  lines(run1$signals[[1]]$x,upper,col=color1,lty='dotted')
+  lines(run1$signals[[1]]$x,lower,col=color1,lty='dotted')
+}
+
+overlayed_histograms <- function(run1,run2,parameter,labels=c('run1','run2')){
+  series1 = run1$field(parameter)
+  series2 = run2$field(parameter)
+  
+  range_min = min(c(series1,series2))
+  range_max = max(c(series1, series2))
+  bins = seq(range_min,range_max,length.out=30)
+  buffer = 0.1*(range_max-range_min)
+  
+  hist1 = hist(series1,breaks=bins,plot=FALSE)
+  hist2 = hist(series2,breaks=bins,plot=FALSE)
+  freq_max = max(hist1$counts, hist2$counts)
+
+  title = paste(caption_dict[parameter],'distribution')
+  hist(series1,col=color1,breaks=bins,xlim=c(range_min-buffer,range_max+buffer),ylim = c(0,1.1*freq_max),main=title,xlab=caption_dict[parameter])
+  hist(series2,col=color2,add=TRUE,breaks=bins)
+  legend_text = labels
+  legend("topleft", legend = legend_text, fill = c(color1,color2), bty = "n")
+}
+```
+
