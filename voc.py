@@ -145,6 +145,10 @@ class signal():
 		#Add the (x,y) datapoints to the plot
 		plt.plot(self.x,self.y, 'o',markersize = 3)
 
+		#Add labels to the plot
+		plt.xlabel('Time')
+		plt.ylabel('Amplitude')
+
 		#Create the output folder if it does not already exist
 		if not os.path.isdir(folder):
 			os.mkdir(folder)
