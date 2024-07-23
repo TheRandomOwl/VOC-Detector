@@ -662,165 +662,176 @@ for date in ['0418','0424','0428']:
 	temp['phenol'] = phenol
 	dat[date+'2023'] = temp
 '''
+"""
+Test
+"""
+file = signal('20230712-0001 Low Flow Phenol_0001.txt')
+file.smooth()
+print(file.plot('test'))
+
+sample = run('20230712-0001 Low Flow Phenol')
+sample.smooth()
+sample.clean()
+sample.plot('test')
 
 
-#UNFINISHED: Note, everything beyond this point is functional, but not yet
-#fully codified as functions and objects to be used on arbitrary
-#sets of data. This means that there are frequent references to specific
-#runs used only for the purpose of example.
+# #UNFINISHED: Note, everything beyond this point is functional, but not yet
+# #fully codified as functions and objects to be used on arbitrary
+# #sets of data. This means that there are frequent references to specific
+# #runs used only for the purpose of example.
 
 
-#This line tells the code to run the block below (comprising the rest of the code)
-#only if this file was run directly and not opened by another file
-#(e.g. opened by the code handling the user interface since it needs
-#the functions from this code)
-if __name__=='__main__':
+# #This line tells the code to run the block below (comprising the rest of the code)
+# #only if this file was run directly and not opened by another file
+# #(e.g. opened by the code handling the user interface since it needs
+# #the functions from this code)
+# if __name__=='__main__':
 
-	#Load the stored data mentioned in the 'save' function above
-	with open('saved_run_objects.p','rb') as f:
-		dat = pickle.load(f)
+# 	#Load the stored data mentioned in the 'save' function above
+# 	with open('saved_run_objects.p','rb') as f:
+# 		dat = pickle.load(f)
 	
-	#Load a couple of saved runs using easy-to-type variable names
-	#for ease of use 
-	prop = dat['04282023']['propane']
-	phen = dat['04282023']['phenol']	
+# 	#Load a couple of saved runs using easy-to-type variable names
+# 	#for ease of use 
+# 	prop = dat['04282023']['propane']
+# 	phen = dat['04282023']['phenol']	
 
-	#Principal Components Analysis and Linear Discriminant Analysis
+# 	#Principal Components Analysis and Linear Discriminant Analysis
 
-	#Convert the two runs' signals to 12-element datapoints
-	data = runs_to_points([prop, phen])
+# 	#Convert the two runs' signals to 12-element datapoints
+# 	data = runs_to_points([prop, phen])
 	
-	#This line normalizes the set of points on a parameter-by-parameter
-	#basis, which is necessary for representing the coefficient importances
-	#of a later LDA on these points but does not change the LDA's predictive
-	#power
-	#data = [[(point-np.mean(elm))/np.std(elm) for point in elm] for elm in data]
+# 	#This line normalizes the set of points on a parameter-by-parameter
+# 	#basis, which is necessary for representing the coefficient importances
+# 	#of a later LDA on these points but does not change the LDA's predictive
+# 	#power
+# 	#data = [[(point-np.mean(elm))/np.std(elm) for point in elm] for elm in data]
 	
-	#Split the data into run1 and run2
-	a = data[:len(prop.signals)]
-	b = data[len(prop.signals):]
+# 	#Split the data into run1 and run2
+# 	a = data[:len(prop.signals)]
+# 	b = data[len(prop.signals):]
 	
-	#Create a principle components analysis object (from the sklearn library)
-	pca = PCA(n_components = 2)
+# 	#Create a principle components analysis object (from the sklearn library)
+# 	pca = PCA(n_components = 2)
 
-	#Fit the data according to PCA and store the transformed version
-	new = pca.fit_transform(a+b)
+# 	#Fit the data according to PCA and store the transformed version
+# 	new = pca.fit_transform(a+b)
 
-	#Split the transformed data into two sets again
-	anew = new[:len(a)]
-	bnew = new[len(a):]
+# 	#Split the transformed data into two sets again
+# 	anew = new[:len(a)]
+# 	bnew = new[len(a):]
 	
-	#Clear the plotting tool
-	plt.clf()
+# 	#Clear the plotting tool
+# 	plt.clf()
 
-	#Plot each set of datapoints
-	plt.plot([elm[0] for elm in anew],[elm[1] for elm in anew],'.',markersize=3,alpha=0.5,label='Propane')
-	plt.plot([elm[0] for elm in bnew],[elm[1] for elm in bnew],'.',markersize=3,alpha=0.5,label='Phenol')
+# 	#Plot each set of datapoints
+# 	plt.plot([elm[0] for elm in anew],[elm[1] for elm in anew],'.',markersize=3,alpha=0.5,label='Propane')
+# 	plt.plot([elm[0] for elm in bnew],[elm[1] for elm in bnew],'.',markersize=3,alpha=0.5,label='Phenol')
 	
-	#Add axis labels, a title, and a legend to the figure
-	plt.xlabel('Component 1')
-	plt.ylabel('Component 2')
-	plt.title('Principle Components Analysis of 4/28/2023 data')
-	plt.legend()
+# 	#Add axis labels, a title, and a legend to the figure
+# 	plt.xlabel('Component 1')
+# 	plt.ylabel('Component 2')
+# 	plt.title('Principle Components Analysis of 4/28/2023 data')
+# 	plt.legend()
 
-	#Save the figure to the same directory as the script with a
-	#predetermined file name
-	plt.savefig('pca_04282023.png')
-	plt.clf()
+# 	#Save the figure to the same directory as the script with a
+# 	#predetermined file name
+# 	plt.savefig('pca_04282023.png')
+# 	plt.clf()
 
-	#A list of row labels to use when generating a table for PCA
-	#weights
-	rowlabels = ['90% area time', '50% area time', '10% area time',
-	'Amplitude', 'Width at 90% amplitude', 'Width at 50% amplitude',
-	'Area between 90% amplitudes', 'Area between 50% amplitudes', 'Rise time 0 to max',
-	'Fall time max to 0', 'Rise time 10% to 90%', 'Fall time 90% to 10%'
-	]
-	#A list of column lables to use when generating a table
-	collabels = ('','Component 1','Component 2')
+# 	#A list of row labels to use when generating a table for PCA
+# 	#weights
+# 	rowlabels = ['90% area time', '50% area time', '10% area time',
+# 	'Amplitude', 'Width at 90% amplitude', 'Width at 50% amplitude',
+# 	'Area between 90% amplitudes', 'Area between 50% amplitudes', 'Rise time 0 to max',
+# 	'Fall time max to 0', 'Rise time 10% to 90%', 'Fall time 90% to 10%'
+# 	]
+# 	#A list of column lables to use when generating a table
+# 	collabels = ('','Component 1','Component 2')
 
-	#Create a list with 12 rows (1 for each parameter)
-	#where the first column (first element in each row) denotes
-	#the weight of that parameter when calculating the first PCA parameter
-	#and the second column does the same for the second PCA parameter
-	table = list(zip(rowlabels,np.around(pca.components_[0],4),np.around(pca.components_[1],4)))
+# 	#Create a list with 12 rows (1 for each parameter)
+# 	#where the first column (first element in each row) denotes
+# 	#the weight of that parameter when calculating the first PCA parameter
+# 	#and the second column does the same for the second PCA parameter
+# 	table = list(zip(rowlabels,np.around(pca.components_[0],4),np.around(pca.components_[1],4)))
 	
-	#Add the header row and a row at the bottom denoting the proportion
-	#of variance in the data explained by each PCA parameter
-	table = [collabels] + table + [('','',''),('Explained Variance Ratio',str(np.around(pca.explained_variance_ratio_[0],3)),str(np.around(pca.explained_variance_ratio_[1],3)))]
+# 	#Add the header row and a row at the bottom denoting the proportion
+# 	#of variance in the data explained by each PCA parameter
+# 	table = [collabels] + table + [('','',''),('Explained Variance Ratio',str(np.around(pca.explained_variance_ratio_[0],3)),str(np.around(pca.explained_variance_ratio_[1],3)))]
 	
-	#Open a predetermined output CSV file
-	with open('pca_table_04282023.csv','w',newline='') as f:
-		writer = csv.writer(f,delimiter = ',')
+# 	#Open a predetermined output CSV file
+# 	with open('pca_table_04282023.csv','w',newline='') as f:
+# 		writer = csv.writer(f,delimiter = ',')
 		
-		#Write each row in the table to the output file
-		for row in table:
-			writer.writerow(row)
+# 		#Write each row in the table to the output file
+# 		for row in table:
+# 			writer.writerow(row)
 	
 	
-	#Create a linear discriminant object (from the sklearn library)
-	lda = LDA()
+# 	#Create a linear discriminant object (from the sklearn library)
+# 	lda = LDA()
 
-	#Fit the LDA to the data and store the transformed data
-	#An LDA algorithmically reduces the data to a single dimension
-	#best explaining the difference between the two classes
-	#and algorithmically determines a cuttoff value maximizing class
-	#separation along the single resulting axis
-	new = lda.fit_transform(a+b,[1 for elm in a]+[2 for elm in b])
+# 	#Fit the LDA to the data and store the transformed data
+# 	#An LDA algorithmically reduces the data to a single dimension
+# 	#best explaining the difference between the two classes
+# 	#and algorithmically determines a cuttoff value maximizing class
+# 	#separation along the single resulting axis
+# 	new = lda.fit_transform(a+b,[1 for elm in a]+[2 for elm in b])
 
-	#Reseparate the transformed data into two sets of datapoints
-	anew = new[:len(a)]
-	bnew = new[len(a):]
+# 	#Reseparate the transformed data into two sets of datapoints
+# 	anew = new[:len(a)]
+# 	bnew = new[len(a):]
 
-	#Calculate the LDA cutoff value so that it can be plotted
-	cutoff = np.mean([np.mean(anew),np.mean(bnew)])
+# 	#Calculate the LDA cutoff value so that it can be plotted
+# 	cutoff = np.mean([np.mean(anew),np.mean(bnew)])
 	
-	#Clear the plotting tool
-	plt.clf()
+# 	#Clear the plotting tool
+# 	plt.clf()
 
-	#Plot each set of datapoints with x-value being their LDA-transformed
-	#coordinate and y-value denoting which run they came from
-	#(to assess class separation)
-	plt.plot([elm[0] for elm in anew],[1 for elm in anew],'o',markersize=3,label='Propane')
-	plt.plot([elm[0] for elm in bnew],[2 for elm in bnew],'o',markersize=3,label='Phenol')
+# 	#Plot each set of datapoints with x-value being their LDA-transformed
+# 	#coordinate and y-value denoting which run they came from
+# 	#(to assess class separation)
+# 	plt.plot([elm[0] for elm in anew],[1 for elm in anew],'o',markersize=3,label='Propane')
+# 	plt.plot([elm[0] for elm in bnew],[2 for elm in bnew],'o',markersize=3,label='Phenol')
 	
-	#Plot a vertical line at the LDA cutoff value
-	plt.vlines(x=cutoff,color='red',ymin=0.9,ymax=2.1)
+# 	#Plot a vertical line at the LDA cutoff value
+# 	plt.vlines(x=cutoff,color='red',ymin=0.9,ymax=2.1)
 	
-	#Add a figure title, axis labels, and a legend
-	plt.xlabel('LDA Transformed Value')
-	plt.ylabel('Datapoint Class')
-	plt.legend()
+# 	#Add a figure title, axis labels, and a legend
+# 	plt.xlabel('LDA Transformed Value')
+# 	plt.ylabel('Datapoint Class')
+# 	plt.legend()
 	
-	#Save the figure with a predetermined name
-	plt.savefig('lda_04282023.png')
-	plt.clf()
+# 	#Save the figure with a predetermined name
+# 	plt.savefig('lda_04282023.png')
+# 	plt.clf()
 	
-	#A code block that plots a bar graph of the importance of each
-	#parameter when calculating the LDA value of a datapoint
-	#This can be used when an LDA is performed on normalized points
-	#(see above)
-	'''
-	plt.clf()
-	plt.bar(range(len(rowlabels)),list(lda.coef_[0]))
-	plt.xticks(range(len(rowlabels)), rowlabels, rotation='vertical')
-	plt.ylabel('Importance to LDA Classification')
-	plt.subplots_adjust(bottom=0.4)
-	plt.savefig('lda_importances_04282023.png')
-	plt.clf()
-	'''
+# 	#A code block that plots a bar graph of the importance of each
+# 	#parameter when calculating the LDA value of a datapoint
+# 	#This can be used when an LDA is performed on normalized points
+# 	#(see above)
+# 	'''
+# 	plt.clf()
+# 	plt.bar(range(len(rowlabels)),list(lda.coef_[0]))
+# 	plt.xticks(range(len(rowlabels)), rowlabels, rotation='vertical')
+# 	plt.ylabel('Importance to LDA Classification')
+# 	plt.subplots_adjust(bottom=0.4)
+# 	plt.savefig('lda_importances_04282023.png')
+# 	plt.clf()
+# 	'''
 	
-	#Export the data for an LDA object to a csv file
-	#Create a table of coefficients with row labels for the corresponding
-	#parameters
-	table = list(zip(rowlabels,list(lda.coef_[0])))
+# 	#Export the data for an LDA object to a csv file
+# 	#Create a table of coefficients with row labels for the corresponding
+# 	#parameters
+# 	table = list(zip(rowlabels,list(lda.coef_[0])))
 
-	#Opened a predetermine output file
-	with open('lda_table_04282023.csv','w',newline='') as f:
-		writer = csv.writer(f,delimiter=',')
+# 	#Opened a predetermine output file
+# 	with open('lda_table_04282023.csv','w',newline='') as f:
+# 		writer = csv.writer(f,delimiter=',')
 
-		#Write a header row
-		writer.writerow(('Parameter','Weight in LDA'))
+# 		#Write a header row
+# 		writer.writerow(('Parameter','Weight in LDA'))
 
-		#Write each row of coefficients
-		for row in table:
-			writer.writerow(row)
+# 		#Write each row of coefficients
+# 		for row in table:
+# 			writer.writerow(row)
