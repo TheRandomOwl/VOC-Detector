@@ -647,30 +647,6 @@ def save(runs):
 		pickle.dump(runs,f)
 	return
 
-#An old code block for loading in data to the dicionary object type
-#mentioned above which would subsequently be saved using the 'save'
-#function above.
-#Unused but useful as a reference for what steps are done to a run
-#when it is loaded and in what order.
-#Functions here are described under the 'run' class above.
-'''
-dat = {}
-for date in ['0418','0424','0428']:
-	propane = run('Prop'+date,flip=True)
-	propane.nnet_clean()
-	propane.smooth()
-	propane.remake_stats()
-	propane.new_stats()
-	phenol = run('Phen'+date,flip=True)
-	phenol.nnet_clean()
-	phenol.smooth()
-	phenol.remake_stats()
-	phenol.new_stats()
-	temp = {}
-	temp['propane'] = propane
-	temp['phenol'] = phenol
-	dat[date+'2023'] = temp
-'''
 """
 Test
 """
