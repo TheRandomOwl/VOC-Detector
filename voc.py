@@ -92,6 +92,9 @@ class signal():
 		if flip:
 			const = -1
 
+		# True if flipped
+		self.flipped = flip
+
 		#Create a list of the x values for the signal
 		self.x = [float(elm[0]) for elm in self.dat]
 
@@ -142,7 +145,8 @@ class signal():
 	#Generate a plot of the signal over time
 	def plot(self,folder):
 
-		plt.ylim(-150,0)
+		if self.flipped: 
+			plt.ylim(-150,0)
 		#Add the (x,y) datapoints to the plot
 		plt.plot(self.x,self.y, 'o',markersize = 3)
 
