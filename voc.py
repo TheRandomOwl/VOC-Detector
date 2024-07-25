@@ -372,55 +372,6 @@ class run():
 			s.smooth()
 
 
-
-#Some code blocks that I used in the past to plot data for runs and/or signals
-#it was useful to keep them here to copy and paste if I needed reference code
-#to make a plot similar to something I had done before, but they are largely
-#unnecessary now
-'''
-#SAMPLE PLOTTING
-
-plt.boxplot([prop.nineties, phen.nineties])
-plt.tight_layout()
-plt.savefig('boxplot.png')
-plt.clf()
-
-plt.bar(['Propane','Phenol'],[np.mean(prop24.nineties), np.mean(phen24.nineties)],yerr = [scipy.stats.sem(prop24.nineties),scipy.stats.sem(phen24.nineties)],capsize = 5)
-plt.savefig('barplot.png')
-plt.clf()
-
-plt.plot(prop24.nineties,prop24.fifties,'o',markersize=3,label='Propane')
-plt.plot(phen24.nineties,phen24.fifties,'o',markersize=3,label='Phenol')
-plt.title('Clustering for 90% vs 50% area times post-cleaning')
-plt.xlabel('Time for 90% area')
-plt.ylabel('Time for 50% area')
-plt.legend()
-plt.savefig('test.png')
-plt.clf()
-
-#xmin, xmax = plt.xlim()
-#x = np.linspace(xmin, xmax, 100)
-#mu, std = scipy.stats.norm.fit(proplarge.nineties)
-#p = scipy.stats.norm.pdf(x, mu, std)
-#plt.plot(x, p, 'k', linewidth=2)
-
-plt.hist(phen18.nineties, bins = 30,density=True)
-plt.title('Distribution of 90% area times for phenol')
-plt.xlabel('Time for 90% area')
-plt.ylabel('Number of signals observed')
-plt.savefig('hist_phen18.png')
-plt.clf()
-
-#PLOT FFT
-plt.clf()
-plt.plot(xf, 2.0/N * np.abs(yf[:N//2]))
-plt.xlabel('Frequency')
-plt.ylabel('Amplitude')
-plt.title('FFT specturm')
-plt.savefig('fft_test.png')
-plt.clf()
-'''
-
 #A function that plots the average signals for two runs
 #useful for subjectively identifying typical signal differences between
 #two treatments
