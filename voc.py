@@ -154,6 +154,7 @@ class signal():
 		plt.plot(self.x,self.y, 'o',markersize = 3)
 
 		#Add labels to the plot
+		plt.title(self.name)
 		plt.xlabel('Time (μs)')
 		plt.ylabel('Amplitude (mV)')
 
