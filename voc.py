@@ -241,11 +241,11 @@ class signal():
 	#Calculate the Fast-Fourier transform of the signal
 	def fft(self):
 		#Number of samples
-		N = len(s.y)
+		N = len(self.y)
 		#Sampling rate
 		T = 0.000000024
 		#FFT y-values
-		self.yf = scipy.fft.fft(s.y)
+		self.yf = scipy.fft.fft(self.y)
 		#FFT frequency scale
 		self.xf = scipy.fft.fftfreq(N, T)[:N//2]
 
