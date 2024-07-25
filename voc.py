@@ -3,6 +3,9 @@ Code by: Eli Haynal
 Supervisor: Dr. Reinhard Schulte
 For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
+
+Modified by: Nathan Perry and Nathan Fisher
+Version: 2024-07-25
 '''
 
 
