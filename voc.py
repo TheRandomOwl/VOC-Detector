@@ -142,6 +142,7 @@ class signal():
 	#Generate a plot of the signal over time
 	def plot(self,folder):
 
+		plt.ylim(-150,0)
 		#Add the (x,y) datapoints to the plot
 		plt.plot(self.x,self.y, 'o',markersize = 3)
 
