@@ -650,10 +650,7 @@ def save(runs):
 """
 Test
 """
-# file = signal('20240724-0001 propane and water_0001.txt', flip=True)
-# file.smooth()
-# file.plot('test')
-
+# loads the saved runs and plots them
 sample = run('07-24-24/20240724-0001 controls/20240724-0001 propane and water', True)
 sample.smooth()
 sample.plot('test')
