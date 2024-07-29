@@ -400,7 +400,7 @@ def plot_average_signals(propane, phenol, filepath):
 
 	#Add a title and axis labels to the plot
 	plt.title('Average signals')
-	plt.xlabel('Time')
+	plt.xlabel('Time (μs)')
 	plt.ylabel('Voltage (mV)')
 
 	#Add a legend to the plot
