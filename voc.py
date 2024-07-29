@@ -76,7 +76,7 @@ def tstats(sample1, sample2, evar = False):
 class signal():
 
 	#The function initiating each class instance from a specified .txt file
-	def __init__(self, infile, name = False, flip = False):
+	def __init__(self, infile, name = False, flip = False, baseline = -400):
 
 		#Open the specified input file and read all of its lines into a list
 		with open(infile) as f:
@@ -103,7 +103,7 @@ class signal():
 
 		#Create a list of y values for the signal, flipping each
 		#if specified and moving them by 400 to zero the signal
-		self.y = [const*float(elm[1])-400 for elm in self.dat]
+		self.y = [const*float(elm[1])+baseline for elm in self.dat]
 
 		#Get the (x,y) position of the peak value
 		self.max = min(self.y)
