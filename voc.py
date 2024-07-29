@@ -601,11 +601,3 @@ def save(runs):
 	with open('saved_run_objects.p','wb') as f:
 		pickle.dump(runs,f)
 	return
-
-"""
-Test
-"""
-# loads the saved runs and plots them
-sample = run('07-24-24/20240724-0001 controls/20240724-0001 propane and water', True)
-sample.smooth()
-sample.plot('test')
