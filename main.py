@@ -1,5 +1,11 @@
 from voc import *
 
-file = signal('20240724-0001 propane and water_0001.txt', flip=True)
+file = signal('1kHz.txt', flip=False, baseline=0)
 file.smooth()
 file.plot('test')
+file.fft()
+file.plot_fft()
+
+# Plot the signal - file.x and file.y are the x and y values of the signal
+plt.plot(file.x, file.y)
+plt.show()
