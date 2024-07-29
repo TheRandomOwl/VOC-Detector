@@ -250,6 +250,26 @@ class signal():
 		#FFT frequency scale
 		self.xf = scipy.fft.fftfreq(N, T)[:N//2]
 
+    # Plot the magnitude of the FFT results
+	def plot_fft(self):
+		yf_magnitude = np.abs(self.yf[:len(self.xf)])
+		
+		# Create a plot
+		plt.figure(figsize=(10, 6))
+		
+		# Plot the frequency vs. magnitude
+		plt.plot(self.xf, yf_magnitude)
+		
+		# Label the axes
+		plt.xlabel('Frequency (Hz)')
+		plt.ylabel('Magnitude')
+		
+		# Add a title
+		plt.title('FFT of the Signal')
+		
+		# Display the plot
+		plt.show()
+
 #A class (custom python datatype) for representing a sample of signals
 class run():
 
