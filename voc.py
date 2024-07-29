@@ -76,7 +76,7 @@ def tstats(sample1, sample2, evar = False):
 class signal():
 
 	#The function initiating each class instance from a specified .txt file
-	def __init__(self, infile, name = False, flip = False):
+	def __init__(self, infile, name = False, flip = False, baseline = -400):
 
 		#Open the specified input file and read all of its lines into a list
 		with open(infile) as f:
@@ -103,7 +103,7 @@ class signal():
 
 		#Create a list of y values for the signal, flipping each
 		#if specified and moving them by 400 to zero the signal
-		self.y = [const*float(elm[1])-400 for elm in self.dat]
+		self.y = [const*float(elm[1])+baseline for elm in self.dat]
 
 		#Get the (x,y) position of the peak value
 		self.max = min(self.y)
@@ -249,6 +249,26 @@ class signal():
 		self.yf = scipy.fft.fft(self.y)
 		#FFT frequency scale
 		self.xf = scipy.fft.fftfreq(N, T)[:N//2]
+
+    # Plot the magnitude of the FFT results
+	def plot_fft(self):
+		yf_magnitude = np.abs(self.yf[:len(self.xf)])
+		
+		# Create a plot
+		plt.figure(figsize=(10, 6))
+		
+		# Plot the frequency vs. magnitude
+		plt.plot(self.xf, yf_magnitude)
+		
+		# Label the axes
+		plt.xlabel('Frequency (Hz)')
+		plt.ylabel('Magnitude')
+		
+		# Add a title
+		plt.title('FFT of the Signal')
+		
+		# Display the plot
+		plt.show()
 
 #A class (custom python datatype) for representing a sample of signals
 class run():
@@ -400,7 +420,7 @@ def plot_average_signals(propane, phenol, filepath):
 
 	#Add a title and axis labels to the plot
 	plt.title('Average signals')
-	plt.xlabel('Time')
+	plt.xlabel('Time (μs)')
 	plt.ylabel('Voltage (mV)')
 
 	#Add a legend to the plot
@@ -601,10 +621,3 @@ def save(runs):
 	with open('saved_run_objects.p','wb') as f:
 		pickle.dump(runs,f)
 	return
-
-"""
-Test
-"""
-file = signal('20240724-0001 propane and water_0001.txt', flip=True)
-file.smooth()
-file.plot('test')
