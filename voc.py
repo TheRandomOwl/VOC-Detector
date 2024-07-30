@@ -76,7 +76,7 @@ def tstats(sample1, sample2, evar = False):
 class signal():
 
 	#The function initiating each class instance from a specified .txt file
-	def __init__(self, infile, name = False, flip = False, baseline = -400):
+	def __init__(self, infile, name = False, flip = False, baseline = 0):
 
 		#Open the specified input file and read all of its lines into a list
 		with open(infile) as f:
