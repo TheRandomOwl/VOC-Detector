@@ -150,6 +150,8 @@ class signal():
 
 		if self.flipped: 
 			plt.ylim(-150,0)
+		else:
+			plt.ylim(-400, 0)
 		#Add the (x,y) datapoints to the plot
 		plt.plot(self.x,self.y, 'o',markersize = 3)
 
