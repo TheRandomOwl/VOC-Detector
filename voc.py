@@ -200,6 +200,12 @@ class signal():
 			return True
 		else:
 			return False
+	
+	# Checks if there exists no peak and returns true if there isn't a peak else return false
+	def is_empty(self):
+		if self.flipped:
+			raise ValueError("Cannot check for empty signal if signal is flipped")
+		return max(self.y) < -390
 
 	#Smooth the signal using a 10-point moving average
 	#Recalculate many signal statistics using new, smoothed y values (see __init__ above)
@@ -321,6 +327,21 @@ class run():
 			if not signal.multimodal():
 				new.append(signal)
 		self.signals = new
+
+	def clean_empty(self):
+		new = []
+		for signal in self.signals:
+			if not signal.is_empty():
+				new.append(signal)
+		self.signals = new
+
+	def not_clean_empty(self):
+		new = []
+		for signal in self.signals:
+			if signal.is_empty():
+				new.append(signal)
+		self.signals = new
+				
 
 	#Calculates time values t for each signal in the run for which the integral
 	#from 0 to t represents 90%, 50%, or 10% of the total area under the curve
