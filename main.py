@@ -1,6 +1,6 @@
 from voc import *
 
-file = signal('1kHz.txt', flip=False, baseline=0)
+file = signal('1kHz.txt', flip=False, baseline_shift=0)
 file.smooth()
 file.plot('test')
 file.fft()
