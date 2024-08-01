@@ -244,17 +244,18 @@ class signal():
 		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
-	def fft2(self):
+	def fft2(self, metric_prefix = 1e-6):
 		# remove dc component
-		self.y -= np.mean(self.y)
-		# fix scalling
-		self.x = [xi * 10**-3 for xi in self.x]
-
-		# Number of samples and sampling rate
-		T = np.mean(np.diff(self.x))
-		n = len(self.x)
+		y = self.y - np.mean(self.y)
 		
-		fft_values = np.fft.fft(self.y)
+		# fix scalling by converting to seconds
+		x = np.array(self.x) * metric_prefix
+
+		# Sample spacing
+		T = np.mean(np.diff(x))
+		n = len(x)
+		
+		fft_values = np.fft.fft(y)
 		fft_frequncies = np.fft.fftfreq(n, d=T)
 		magnitude = np.abs(fft_values) / n
 		self.yf = magnitude[:n//2]
