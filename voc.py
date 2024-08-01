@@ -99,51 +99,11 @@ class signal():
 		self.flipped = flip
 
 		#Create a list of the x values for the signal
-		self.x = [float(elm[0]) for elm in self.dat]
+		self.x = np.array([float(elm[0]) for elm in self.dat])
 
 		#Create a list of y values for the signal, flipping each
 		#if specified and moving them by 400 to zero the signal
-		self.y = [const*float(elm[1])+baseline_shift for elm in self.dat]
-
-		#Get the (x,y) position of the peak value
-		self.max = min(self.y)
-		self.max_x = self.x[self.y.index(self.max)]
-
-		#Get the x values for the earliest and latest positions at which
-		#the signal reaches 90%, 50%, and 10% amplitudes
-		self.n = []
-		i = 0 
-		while self.y[i] > 0.9*self.max:
-			i += 1
-		self.n.append(i)
-		i = -1
-		while self.y[i] > 0.9*self.max:
-			i -= 1
-		self.n.append(i)
-		self.f = []
-		i = 0 
-		while self.y[i] > 0.5*self.max:
-			i += 1
-		self.f.append(i)
-		i = -1
-		while self.y[i] > 0.5*self.max:
-			i -= 1
-		self.f.append(i)
-		self.t = []
-		i = 0 
-		while self.y[i] > 0.1*self.max:
-			i += 1
-		self.t.append(i)
-		i = -1
-		while self.y[i] > 0.1*self.max:
-			i -= 1
-		self.t.append(i)
-
-		#Calculate the 0-100% and 10-90% rise and fall times for the signal
-		self.risetime = self.max_x-self.x[self.t[0]]
-		self.falltime = self.x[self.t[1]] - self.max_x
-		self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
-		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
+		self.y = np.array([const*float(elm[1])+baseline_shift for elm in self.dat])
 
 	#Generate a plot of the signal over time
 	def plot(self,folder):
