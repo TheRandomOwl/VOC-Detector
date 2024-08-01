@@ -22,10 +22,6 @@ from sklearn.decomposition import PCA #Principal Components Analysis
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA #Linear Discriminant Analysis
 import pickle #A library for saving data in a python-readable format
 
-#Set the font for all figures generated
-plt.rcParams.update({'font.sans-serif':'Times New Roman'})
-
-
 #Load the decision algorithm for recognizing double-peaked signals
 with open('multi_nnet.p','rb') as f:
 	multi_nnet = pickle.load(f)
