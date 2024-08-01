@@ -260,8 +260,8 @@ class signal():
 		fft_values = np.fft.fft(y)
 		fft_frequncies = np.fft.fftfreq(n, d=T)
 		magnitude = np.abs(fft_values) / n
-		self.yf = magnitude[:n//2]
-		self.xf = fft_frequncies[:n//2]
+		self.yf = np.array(magnitude[:n//2])
+		self.xf = np.array(fft_frequncies[:n//2])
 
     # Plot the magnitude of the FFT results
 	def show_fft(self):
@@ -422,7 +422,17 @@ class run():
 	def smooth(self):
 		for s in self.signals:
 			s.smooth()
+	def avg_fft(self):
+		avg_yf = np.zeros(len(self.signals[0].yf))
+		for s in self.signals:
+			avg_yf += s.yf
+		avg_yf = avg_yf / len(self.signals)
+		avg_xf = self.signals[0].xf
 
+		plt.plot(avg_xf, avg_yf)
+		plt.ylim(0,2.5)
+		plt.show()
+		
 
 #A function that plots the average signals for two runs
 #useful for subjectively identifying typical signal differences between
