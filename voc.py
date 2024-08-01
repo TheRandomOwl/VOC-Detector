@@ -142,19 +142,21 @@ class signal():
 		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Generate a plot of the signal over time
-	def plot(self,folder):
-
-		if self.flipped: 
-			plt.ylim(-150,0)
+	def plot(self,folder,fft = False):
+		if fft:
+			plt.plot(self.xf,self.yf)
+			plt.title('FFT: ' + self.name)
+			plt.xlabel('Frequency (Hz)')
+			plt.ylabel('Magnitude (mV)')
 		else:
-			plt.ylim(-400, 0)
-		#Add the (x,y) datapoints to the plot
-		plt.plot(self.x,self.y, 'o',markersize = 3)
-
-		#Add labels to the plot
-		plt.title(self.name)
-		plt.xlabel('Time (μs)')
-		plt.ylabel('Amplitude (mV)')
+			if self.flipped:
+				plt.ylim(-150,0)
+			else:
+				plt.ylim(-400,0)
+			plt.title(self.name)
+			plt.xlabel('Time (μs)')
+			plt.ylabel('Amplitude (mV)')
+			plt.plot(self.x,self.y)	
 
 		#Create the output folder if it does not already exist
 		if not os.path.isdir(folder):
@@ -315,10 +317,10 @@ class run():
 		return(self.name)
 	
 	#Plots every signal in the run to a specified folder	
-	def plot(self,folder):
+	def plot(self,folder,fft = False):
 		i = 0
 		for s in self.signals:
-			s.plot(folder)
+			s.plot(folder,fft)
 			i += 1
 			print(f'Plotting signals for {self.name}, {i} of {len(self.signals)} complete.',end='\r')
 
