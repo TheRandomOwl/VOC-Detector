@@ -249,12 +249,17 @@ class signal():
 
 	#Calculate the Fast-Fourier transform of the signal
 	def fft2(self):
+		# remove dc component
 		self.y -= np.mean(self.y)
-		#Sampling rate
-		T = 0.000000024
+		# fix scalling
+		self.x = [xi * 10**-3 for xi in self.x]
+
+		# Number of samples and sampling rate
+		T = np.mean(np.diff(self.x))
 		n = len(self.x)
+		
 		fft_values = np.fft.fft(self.y)
-		fft_frequncies = np.fft.fftfreq(n, d=1/T)
+		fft_frequncies = np.fft.fftfreq(n, d=T)
 		magnitude = np.abs(fft_values) / n
 		self.yf = magnitude[:n//2]
 		self.xf = fft_frequncies[:n//2]
