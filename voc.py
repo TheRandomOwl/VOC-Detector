@@ -244,7 +244,7 @@ class signal():
 		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
-	def fft2(self, metric_prefix = 1e-6):
+	def fft(self, metric_prefix = 1e-6):
 		# remove dc component
 		y = self.y - np.mean(self.y)
 		
@@ -260,17 +260,6 @@ class signal():
 		magnitude = np.abs(fft_values) / n
 		self.yf = magnitude[:n//2]
 		self.xf = fft_frequncies[:n//2]
-
-	def fft(self):
-		self.y -= np.mean(self.y)
-		#Number of samples
-		N = len(self.y)
-		#Sampling rate
-		T = 0.000000024
-		#FFT y-values
-		self.yf = scipy.fft.fft(self.y)
-		#FFT frequency scale
-		self.xf = scipy.fft.fftfreq(N, T)[:N//2]
 
     # Plot the magnitude of the FFT results
 	def plot_fft(self):
@@ -332,6 +321,10 @@ class run():
 			s.plot(folder)
 			i += 1
 			print(f'Plotting signals for {self.name}, {i} of {len(self.signals)} complete.',end='\r')
+
+	def fft(self):
+		for s in self.signals:
+			s.fft()
 
 	#Removes double peaked signal from the run using the 'signal.clean()'
 	#method above (unused)
