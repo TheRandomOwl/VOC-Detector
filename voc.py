@@ -262,7 +262,7 @@ class signal():
 		self.xf = fft_frequncies[:n//2]
 
     # Plot the magnitude of the FFT results
-	def plot_fft(self):
+	def show_fft(self):
 		yf_magnitude = np.abs(self.yf[:len(self.xf)])
 		
 		# Create a plot
