@@ -422,15 +422,20 @@ class run():
 	def smooth(self):
 		for s in self.signals:
 			s.smooth()
-	def avg_fft(self):
-		avg_yf = np.zeros(len(self.signals[0].yf))
+	def avg_fft(self, yaxis = (0,3), xaxis = (-100,2e6)):
+		self.avg_yf = np.zeros(len(self.signals[0].yf))
 		for s in self.signals:
-			avg_yf += s.yf
-		avg_yf = avg_yf / len(self.signals)
-		avg_xf = self.signals[0].xf
+			self.avg_yf += s.yf
+		self.avg_yf = self.avg_yf / len(self.signals)
+		self.avg_xf = self.signals[0].xf
 
-		plt.plot(avg_xf, avg_yf)
-		plt.ylim(0,2.5)
+	def show_avg_fft(self, yaxis=(0, 3), xaxis=(-100, 1e6)):
+		plt.plot(self.avg_xf, self.avg_yf)
+		plt.title('Average FFT: ' + self.name)
+		plt.xlabel('Frequency (Hz)')
+		plt.ylabel('Magnitude')
+		plt.ylim(yaxis)
+		plt.xlim(xaxis)
 		plt.show()
 		
 
