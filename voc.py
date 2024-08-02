@@ -22,10 +22,6 @@ from sklearn.decomposition import PCA #Principal Components Analysis
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA #Linear Discriminant Analysis
 import pickle #A library for saving data in a python-readable format
 
-#Set the font for all figures generated
-plt.rcParams.update({'font.sans-serif':'Times New Roman'})
-
-
 #Load the decision algorithm for recognizing double-peaked signals
 with open('multi_nnet.p','rb') as f:
 	multi_nnet = pickle.load(f)
@@ -106,19 +102,21 @@ class signal():
 		self.y = np.array([const*float(elm[1])+baseline_shift for elm in self.dat])
 
 	#Generate a plot of the signal over time
-	def plot(self,folder):
-
-		if self.flipped: 
-			plt.ylim(-150,0)
+	def plot(self,folder,fft = False):
+		if fft:
+			plt.plot(self.xf,self.yf)
+			plt.title('FFT: ' + self.name)
+			plt.xlabel('Frequency (Hz)')
+			plt.ylabel('Magnitude (mV)')
 		else:
-			plt.ylim(-400, 0)
-		#Add the (x,y) datapoints to the plot
-		plt.plot(self.x,self.y, 'o',markersize = 3)
-
-		#Add labels to the plot
-		plt.title(self.name)
-		plt.xlabel('Time (μs)')
-		plt.ylabel('Amplitude (mV)')
+			if self.flipped:
+				plt.ylim(-150,0)
+			else:
+				plt.ylim(-400,0)
+			plt.title(self.name)
+			plt.xlabel('Time (μs)')
+			plt.ylabel('Amplitude (mV)')
+			plt.plot(self.x,self.y)	
 
 		#Create the output folder if it does not already exist
 		if not os.path.isdir(folder):
@@ -208,35 +206,25 @@ class signal():
 		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
-	def fft2(self):
+	def fft(self, metric_prefix = 1e-6):
 		# remove dc component
-		self.y -= np.mean(self.y)
-		# fix scalling
-		self.x = [xi * 10**-3 for xi in self.x]
-
-		# Number of samples and sampling rate
-		T = np.mean(np.diff(self.x))
-		n = len(self.x)
+		y = self.y - np.mean(self.y)
 		
-		fft_values = np.fft.fft(self.y)
+		# fix scalling by converting to seconds
+		x = np.array(self.x) * metric_prefix
+
+		# Sample spacing
+		T = np.mean(np.diff(x))
+		n = len(x)
+		
+		fft_values = np.fft.fft(y)
 		fft_frequncies = np.fft.fftfreq(n, d=T)
 		magnitude = np.abs(fft_values) / n
-		self.yf = magnitude[:n//2]
-		self.xf = fft_frequncies[:n//2]
-
-	def fft(self):
-		self.y -= np.mean(self.y)
-		#Number of samples
-		N = len(self.y)
-		#Sampling rate
-		T = 0.000000024
-		#FFT y-values
-		self.yf = scipy.fft.fft(self.y)
-		#FFT frequency scale
-		self.xf = scipy.fft.fftfreq(N, T)[:N//2]
+		self.yf = np.array(magnitude[:n//2])
+		self.xf = np.array(fft_frequncies[:n//2])
 
     # Plot the magnitude of the FFT results
-	def plot_fft(self):
+	def show_fft(self):
 		yf_magnitude = np.abs(self.yf[:len(self.xf)])
 		
 		# Create a plot
@@ -289,12 +277,16 @@ class run():
 		return(self.name)
 	
 	#Plots every signal in the run to a specified folder	
-	def plot(self,folder):
+	def plot(self,folder,fft = False):
 		i = 0
 		for s in self.signals:
-			s.plot(folder)
+			s.plot(folder,fft)
 			i += 1
 			print(f'Plotting signals for {self.name}, {i} of {len(self.signals)} complete.',end='\r')
+
+	def fft(self):
+		for s in self.signals:
+			s.fft()
 
 	#Removes double peaked signal from the run using the 'signal.clean()'
 	#method above (unused)
@@ -390,7 +382,22 @@ class run():
 	def smooth(self):
 		for s in self.signals:
 			s.smooth()
+	def avg_fft(self):
+		self.avg_yf = np.zeros(len(self.signals[0].yf))
+		for s in self.signals:
+			self.avg_yf += s.yf
+		self.avg_yf = self.avg_yf / len(self.signals)
+		self.avg_xf = self.signals[0].xf
 
+	def show_avg_fft(self, ybottom=0, ytop=None, xleft=0, xright=None):
+		plt.plot(self.avg_xf, self.avg_yf)
+		plt.title('Average FFT: ' + self.name)
+		plt.xlabel('Frequency (Hz)')
+		plt.ylabel('Magnitude')
+		plt.ylim(bottom=ybottom, top=ytop)
+		plt.xlim(left=xleft, right=xright)
+		plt.show()
+		
 
 #A function that plots the average signals for two runs
 #useful for subjectively identifying typical signal differences between
