@@ -422,7 +422,7 @@ class run():
 	def smooth(self):
 		for s in self.signals:
 			s.smooth()
-	def avg_fft(self, yaxis = (0,3), xaxis = (-100,2e6)):
+	def avg_fft(self):
 		self.avg_yf = np.zeros(len(self.signals[0].yf))
 		for s in self.signals:
 			self.avg_yf += s.yf
