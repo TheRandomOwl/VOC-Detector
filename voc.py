@@ -429,13 +429,13 @@ class run():
 		self.avg_yf = self.avg_yf / len(self.signals)
 		self.avg_xf = self.signals[0].xf
 
-	def show_avg_fft(self, yaxis=(0, 3), xaxis=(-100, 1e6)):
+	def show_avg_fft(self, ybottom=0, ytop=None, xleft=0, xright=None):
 		plt.plot(self.avg_xf, self.avg_yf)
 		plt.title('Average FFT: ' + self.name)
 		plt.xlabel('Frequency (Hz)')
 		plt.ylabel('Magnitude')
-		plt.ylim(yaxis)
-		plt.xlim(xaxis)
+		plt.ylim(bottom=ybottom, top=ytop)
+		plt.xlim(left=xleft, right=xright)
 		plt.show()
 		
 
