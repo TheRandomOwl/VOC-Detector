@@ -94,7 +94,7 @@ class signal():
 			self.y = np.array([const*float(elm[1])+baseline_shift for elm in data])
 
 		#Set a name for the object so that it can be identified
-		self.name = infile
+		self.name = os.path.split(infile)[1]
 		if name:
 			self.name = name
 
