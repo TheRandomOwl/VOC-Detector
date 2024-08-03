@@ -74,32 +74,32 @@ class signal():
 	#The function initiating each class instance from a specified .txt file
 	def __init__(self, infile, name = False, flip = False, baseline_shift = 0):
 
-		#Open the specified input file and read all of its lines into a list
-		with open(infile) as f:
-			reader = csv.reader(f,delimiter='\t')
-			self.dat = [row for row in reader]
-			#Eliminate the three header lines
-			self.dat = self.dat[3:]
-
-		#Set a name for the object so that it can be identified
-		self.name = infile
-		if name:
-			self.name = name
-		
 		#Flip the data only if specified
 		const = 1
 		if flip:
 			const = -1
 
+		#Open the specified input file and read all of its lines into a list
+		with open(infile) as f:
+			reader = csv.reader(f,delimiter='\t')
+			data = [row for row in reader]
+			#Eliminate the three header lines
+			data = data[3:]
+
+			#Create a list of the x values for the signal
+			self.x = np.array([float(elm[0]) for elm in data])
+
+			#Create a list of y values for the signal, flipping each
+			#if specified and moving them by 400 to zero the signal
+			self.y = np.array([const*float(elm[1])+baseline_shift for elm in data])
+
+		#Set a name for the object so that it can be identified
+		self.name = infile
+		if name:
+			self.name = name
+
 		# True if flipped
 		self.flipped = flip
-
-		#Create a list of the x values for the signal
-		self.x = np.array([float(elm[0]) for elm in self.dat])
-
-		#Create a list of y values for the signal, flipping each
-		#if specified and moving them by 400 to zero the signal
-		self.y = np.array([const*float(elm[1])+baseline_shift for elm in self.dat])
 
 	#Generate a plot of the signal over time
 	def plot(self,folder,fft = False):
