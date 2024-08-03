@@ -90,7 +90,7 @@ class signal():
 			self.x = np.array([float(elm[0]) for elm in data])
 
 			#Create a list of y values for the signal, flipping each
-			#if specified and moving them by 400 to zero the signal
+			#if specified and moving them to zero the signal
 			self.y = np.array([const*float(elm[1])+baseline_shift for elm in data])
 
 		#Set a name for the object so that it can be identified
