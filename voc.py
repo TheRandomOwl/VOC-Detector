@@ -324,9 +324,9 @@ class run():
 			i += 1
 			print(f'Plotting signals for {self.name}, {i} of {len(self.signals)} complete.',end='\r')
 
-	def fft(self):
+	def fft(self, mp=1e-6):
 		for s in self.signals:
-			s.fft()
+			s.fft( metric_prefix = mp)
 
 	#Removes double peaked signal from the run using the 'signal.clean()'
 	#method above (unused)
