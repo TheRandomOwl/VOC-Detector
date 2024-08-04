@@ -182,7 +182,7 @@ class signal():
 		self.x, self.y = mvavg(self.x, self.y, window_size)
 		if self.flipped:
 			if np.max(self.y) >= 0:
-				raise ValueError("Cannot recalculate signal statistics, try changing the baseline shift")
+				raise ValueError("Cannot recalculate signal statistics, graph is above the x axis. Try changing the baseline shift")
 			self.max = np.min(self.y)
 			self.max_x = self.x[np.argmin(self.y)]
 			self.n = []
