@@ -21,6 +21,8 @@ from sklearn.neural_network import MLPClassifier #A neural network object
 from sklearn.decomposition import PCA #Principal Components Analysis
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA #Linear Discriminant Analysis
 import pickle #A library for saving data in a python-readable format
+import multiprocessing # A library for parallel processing
+from tqdm import tqdm # A library for progress bars
 
 #Load the decision algorithm for recognizing double-peaked signals
 with open('multi_nnet.p','rb') as f:
@@ -249,27 +251,26 @@ class run():
 	#A function creating the run data object from a specified folder of .txt files
 	def __init__(self, foldername, flip = False):
 
-		#Creating a name that is the same as the folder name
-		self.name = os.path.split(foldername)[-1]
+		self.name = os.path.split(foldername)[1]
+		
+		# Get the list of files to be processed and filter out hidden files
+		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.']
 
-		#Create a signal object (see above) from every .txt file in the specified folder
-		#create a list of these signal objects for this run object
-		self.signals = []
-		i = 0
-		l = os.listdir(foldername)
-		l = [filename for filename in l if filename[0] != '.']
-		for filename in l:
-			f = os.path.join(foldername, filename)
-			try:
-				self.signals.append(signal(f,name = filename,flip = flip))
-			
-			#Skip loading a signal if a 'NaN' value is encountered
-			except ValueError:
-				pass
-			i += 1
+		# Create a pool of worker processes
+		with multiprocessing.Pool() as pool:
+			# Use pool.map to parallelize the loading of signals
+			results = list(tqdm(pool.imap(self.load_signal, [(f, flip) for f in files]), total=len(files), desc="Loading files"))
 
-			#Print a progress message
-			print(f'Loading files for {self.name}, {i} of {len(l)} complete.',end = '\r')
+		# Filter out any None results (in case of errors)
+		self.signals = [res for res in results if res is not None]
+
+	@staticmethod
+	def load_signal(args):
+		f, flip = args
+		try:
+			return signal(f, flip=flip)
+		except ValueError:
+			return None
 
 	#A function defining how a run object is represented when printed
 	#to the command line, etc. Increases readability.
@@ -278,11 +279,15 @@ class run():
 	
 	#Plots every signal in the run to a specified folder	
 	def plot(self,folder,fft = False):
-		i = 0
-		for s in self.signals:
-			s.plot(folder,fft)
-			i += 1
-			print(f'Plotting signals for {self.name}, {i} of {len(self.signals)} complete.',end='\r')
+		with multiprocessing.Pool() as pool:
+			# Use pool.map to parallelize the plotting of signals and us tqdm to show progress
+			list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]),
+                      total=len(self.signals), desc="Plotting signals"))
+
+	@staticmethod
+	def plot_signals(args):
+		s, folder, plot_fft = args
+		s.plot(folder, fft=plot_fft)
 
 	def fft(self, mp=1e-6):
 		for s in self.signals:
@@ -380,8 +385,16 @@ class run():
 	
 	#Smooth each signal in the run with a 10-point moving average
 	def smooth(self):
-		for s in self.signals:
-			s.smooth()
+		with multiprocessing.Pool() as pool:
+			# Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
+			self.signals = list(tqdm(pool.imap(self.smooth_signals, self.signals), 
+							total=len(self.signals), desc="Smoothing signals"))
+	
+	@staticmethod
+	def smooth_signals(s):
+		s.smooth()
+		return s
+	
 	def avg_fft(self):
 		self.avg_yf = np.zeros(len(self.signals[0].yf))
 		for s in self.signals:
