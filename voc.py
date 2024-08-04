@@ -28,10 +28,19 @@ from tqdm import tqdm # A library for progress bars
 with open('multi_nnet.p','rb') as f:
 	multi_nnet = pickle.load(f)
 
-#A function to calculate the moving average of a list of data
-def mvavg(dat, size):
-	a = [sum(dat[i:i+size])/size for i in range(len(dat)-size)]
-	return a
+def mvavg(x, y, window_size):
+	if window_size < 1 or window_size > len(y):
+		raise ValueError("Window size must be between 1 and the length of the input array.")
+	
+	# Calculate moving average
+	averages = np.convolve(y, np.ones(window_size)/window_size, mode='valid')
+	
+	# Align x with the moving average
+	start_index = window_size - 1
+	aligned_x = np.asarray(x[start_index: start_index + len(averages)])
+	aligned_x -= (aligned_x[0] - x[0]) / 2
+	
+	return aligned_x, averages
 
 #A function for integration by the trapezoidal rule
 def trap(x,y):
@@ -167,45 +176,47 @@ class signal():
 			raise ValueError("Cannot check for empty signal if signal is flipped")
 		return max(self.y) < -390
 
-	#Smooth the signal using a 10-point moving average
+	#Smooth the signal using a  moving average
 	#Recalculate many signal statistics using new, smoothed y values (see __init__ above)
-	def smooth(self):
-		self.y = mvavg(self.y,10)
-		self.x = self.x[:-10]
-		self.max = min(self.y)
-		self.max_x = self.x[self.y.index(self.max)]
-		self.n = []
-		i = 0 
-		while self.y[i] > 0.9*self.max:
-			i += 1
-		self.n.append(i)
-		i = -1
-		while self.y[i] > 0.9*self.max:
-			i -= 1
-		self.n.append(i)
-		self.f = []
-		i = 0 
-		while self.y[i] > 0.5*self.max:
-			i += 1
-		self.f.append(i)
-		i = -1
-		while self.y[i] > 0.5*self.max:
-			i -= 1
-		self.f.append(i)
-		self.t = []
-		i = 0 
-		while self.y[i] > 0.1*self.max:
-			i += 1
-		self.t.append(i)
-		i = -1
-		while self.y[i] > 0.1*self.max:
-			i -= 1
-		self.t.append(i)
+	def smooth(self, window_size = 10):
+		self.x, self.y = mvavg(self.x, self.y, window_size)
+		if self.flipped:
+			if np.max(self.y) >= 0:
+				raise ValueError("Cannot recalculate signal statistics, try changing the baseline shift")
+			self.max = np.min(self.y)
+			self.max_x = self.x[np.argmin(self.y)]
+			self.n = []
+			i = 0 
+			while self.y[i] > 0.9*self.max:
+				i += 1
+			self.n.append(i)
+			i = -1
+			while self.y[i] > 0.9*self.max:
+				i -= 1
+			self.n.append(i)
+			self.f = []
+			i = 0 
+			while self.y[i] > 0.5*self.max:
+				i += 1
+			self.f.append(i)
+			i = -1
+			while self.y[i] > 0.5*self.max:
+				i -= 1
+			self.f.append(i)
+			self.t = []
+			i = 0 
+			while self.y[i] > 0.1*self.max:
+				i += 1
+			self.t.append(i)
+			i = -1
+			while self.y[i] > 0.1*self.max:
+				i -= 1
+			self.t.append(i)
 
-		self.risetime = self.max_x-self.x[self.t[0]]
-		self.falltime = self.x[self.t[1]] - self.max_x
-		self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
-		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
+			self.risetime = self.max_x-self.x[self.t[0]]
+			self.falltime = self.x[self.t[1]] - self.max_x
+			self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
+			self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
 	def fft(self, metric_prefix = 1e-6):
