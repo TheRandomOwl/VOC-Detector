@@ -171,10 +171,10 @@ class signal():
 			return False
 	
 	# Checks if there exists no peak and returns true if there isn't a peak else return false
-	def is_empty(self):
+	def is_empty(self, threshold=-390):
 		if self.flipped:
 			raise ValueError("Cannot check for empty signal if signal is flipped")
-		return max(self.y) < -390
+		return max(self.y) < threshold
 
 	#Smooth the signal using a moving average
 	#Recalculate many signal statistics using new, smoothed y values
