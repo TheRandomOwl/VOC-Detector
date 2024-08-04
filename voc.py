@@ -236,7 +236,7 @@ class signal():
 		self.yf = np.asarray(magnitude[:n//2])
 		self.xf = np.asarray(fft_frequncies[:n//2])
 
-    # Plot the magnitude of the FFT results
+	# Plot the magnitude of the FFT results
 	def show_fft(self):
 		yf_magnitude = np.abs(self.yf[:len(self.xf)])
 		
@@ -292,8 +292,7 @@ class run():
 	def plot(self,folder,fft = False):
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the plotting of signals and us tqdm to show progress
-			list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]),
-                      total=len(self.signals), desc="Plotting signals"))
+			list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Plotting signals"))
 
 	@staticmethod
 	def plot_signals(args):
