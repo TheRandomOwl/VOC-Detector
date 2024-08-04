@@ -176,44 +176,47 @@ class signal():
 			raise ValueError("Cannot check for empty signal if signal is flipped")
 		return max(self.y) < -390
 
-	#Smooth the signal using a 10-point moving average
-	#Recalculate many signal statistics using new, smoothed y values (see __init__ above)
-	def smooth(self):
-		self.x, self.y = mvavg(self.x, self.y,10)
-		self.max = np.min(self.y)
-		self.max_x = self.x[np.argmin(self.y)]
-		self.n = []
-		i = 0 
-		while self.y[i] > 0.9*self.max:
-			i += 1
-		self.n.append(i)
-		i = -1
-		while self.y[i] > 0.9*self.max:
-			i -= 1
-		self.n.append(i)
-		self.f = []
-		i = 0 
-		while self.y[i] > 0.5*self.max:
-			i += 1
-		self.f.append(i)
-		i = -1
-		while self.y[i] > 0.5*self.max:
-			i -= 1
-		self.f.append(i)
-		self.t = []
-		i = 0 
-		while self.y[i] > 0.1*self.max:
-			i += 1
-		self.t.append(i)
-		i = -1
-		while self.y[i] > 0.1*self.max:
-			i -= 1
-		self.t.append(i)
+	#Smooth the signal using a moving average
+	#Recalculate many signal statistics using new, smoothed y values
+	def smooth(self, window_size = 10):
+		self.x, self.y = mvavg(self.x, self.y, window_size)
+		if self.flipped:
+			if np.max(self.y) >= 0:
+				raise ValueError("Cannot recalculate signal statistics, try changing the baseline shift")
+			self.max = np.min(self.y)
+			self.max_x = self.x[np.argmin(self.y)]
+			self.n = []
+			i = 0 
+			while self.y[i] > 0.9*self.max:
+				i += 1
+			self.n.append(i)
+			i = -1
+			while self.y[i] > 0.9*self.max:
+				i -= 1
+			self.n.append(i)
+			self.f = []
+			i = 0 
+			while self.y[i] > 0.5*self.max:
+				i += 1
+			self.f.append(i)
+			i = -1
+			while self.y[i] > 0.5*self.max:
+				i -= 1
+			self.f.append(i)
+			self.t = []
+			i = 0 
+			while self.y[i] > 0.1*self.max:
+				i += 1
+			self.t.append(i)
+			i = -1
+			while self.y[i] > 0.1*self.max:
+				i -= 1
+			self.t.append(i)
 
-		self.risetime = self.max_x-self.x[self.t[0]]
-		self.falltime = self.x[self.t[1]] - self.max_x
-		self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
-		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
+			self.risetime = self.max_x-self.x[self.t[0]]
+			self.falltime = self.x[self.t[1]] - self.max_x
+			self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
+			self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
 	def fft(self, metric_prefix = 1e-6):
