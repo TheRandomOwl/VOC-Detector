@@ -176,8 +176,8 @@ class signal():
 			raise ValueError("Cannot check for empty signal if signal is flipped")
 		return max(self.y) < -390
 
-	#Smooth the signal using a  moving average
-	#Recalculate many signal statistics using new, smoothed y values (see __init__ above)
+	#Smooth the signal using a moving average
+	#Recalculate many signal statistics using new, smoothed y values
 	def smooth(self, window_size = 10):
 		self.x, self.y = mvavg(self.x, self.y, window_size)
 		if self.flipped:
