@@ -89,11 +89,11 @@ class signal():
 			data = data[3:]
 
 			#Create a list of the x values for the signal
-			self.x = np.array([float(elm[0]) for elm in data])
+			self.x = np.asarray([float(elm[0]) for elm in data])
 
 			#Create a list of y values for the signal, flipping each
 			#if specified and moving them to zero the signal
-			self.y = np.array([const*float(elm[1])+baseline_shift for elm in data])
+			self.y = np.asarray([const*float(elm[1])+baseline_shift for elm in data])
 
 		#Set a name for the object so that it can be identified
 		self.name = os.path.split(infile)[1]
@@ -213,7 +213,7 @@ class signal():
 		y = self.y - np.mean(self.y)
 		
 		# fix scalling by converting to seconds
-		x = np.array(self.x) * metric_prefix
+		x = np.asarray(self.x) * metric_prefix
 
 		# Sample spacing
 		T = np.mean(np.diff(x))
@@ -222,8 +222,8 @@ class signal():
 		fft_values = np.fft.fft(y)
 		fft_frequncies = np.fft.fftfreq(n, d=T)
 		magnitude = np.abs(fft_values) / n
-		self.yf = np.array(magnitude[:n//2])
-		self.xf = np.array(fft_frequncies[:n//2])
+		self.yf = np.asarray(magnitude[:n//2])
+		self.xf = np.asarray(fft_frequncies[:n//2])
 
     # Plot the magnitude of the FFT results
 	def show_fft(self):
