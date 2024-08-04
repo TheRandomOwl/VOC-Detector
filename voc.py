@@ -28,10 +28,19 @@ from tqdm import tqdm # A library for progress bars
 with open('multi_nnet.p','rb') as f:
 	multi_nnet = pickle.load(f)
 
-#A function to calculate the moving average of a list of data
-def mvavg(dat, size):
-	a = [sum(dat[i:i+size])/size for i in range(len(dat)-size)]
-	return a
+def mvavg(x, y, window_size):
+	if window_size < 1 or window_size > len(y):
+		raise ValueError("Window size must be between 1 and the length of the input array.")
+	
+	# Calculate moving average
+	averages = np.convolve(y, np.ones(window_size)/window_size, mode='valid')
+	
+	# Align x with the moving average
+	start_index = window_size - 1
+	aligned_x = np.asarray(x[start_index: start_index + len(averages)])
+	aligned_x -= (aligned_x[0] - x[0]) / 2
+	
+	return aligned_x, averages
 
 #A function for integration by the trapezoidal rule
 def trap(x,y):
@@ -170,10 +179,9 @@ class signal():
 	#Smooth the signal using a 10-point moving average
 	#Recalculate many signal statistics using new, smoothed y values (see __init__ above)
 	def smooth(self):
-		self.y = mvavg(self.y,10)
-		self.x = self.x[:-10]
-		self.max = min(self.y)
-		self.max_x = self.x[self.y.index(self.max)]
+		self.x, self.y = mvavg(self.x, self.y,10)
+		self.max = np.min(self.y)
+		self.max_x = self.x[np.argmin(self.y)]
 		self.n = []
 		i = 0 
 		while self.y[i] > 0.9*self.max:
