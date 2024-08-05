@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2024-07-25
+Version: 2.1.1
 '''
 
 
@@ -23,6 +23,12 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA #Lin
 import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
+
+METRIC = {
+	'(us)': 1e-6,
+	'(ms)': 1e-3,
+	'(s)': 1
+}
 
 #Load the decision algorithm for recognizing double-peaked signals
 with open('multi_nnet.p','rb') as f:
@@ -94,6 +100,10 @@ class signal():
 		with open(infile) as f:
 			reader = csv.reader(f,delimiter='\t')
 			data = [row for row in reader]
+
+			#Extract the units of the signal from the header
+			self.units = data[1]
+
 			#Eliminate the three header lines
 			data = data[3:]
 
@@ -121,15 +131,15 @@ class signal():
 			plt.plot(self.xf,self.yf)
 			plt.title('FFT: ' + self.name)
 			plt.xlabel('Frequency (Hz)')
-			plt.ylabel('Magnitude (mV)')
+			plt.ylabel('Magnitude ' + self.units[1])
 		else:
 			if self.flipped:
 				plt.ylim(-150,0)
 			else:
 				plt.ylim(-400,0)
 			plt.title(self.name)
-			plt.xlabel('Time (μs)')
-			plt.ylabel('Amplitude (mV)')
+			plt.xlabel('Time ' + self.units[0])
+			plt.ylabel('Amplitude ' + self.units[1])
 			plt.plot(self.x,self.y)	
 
 		#Create the output folder if it does not already exist
@@ -225,12 +235,15 @@ class signal():
 			self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
-	def fft(self, metric_prefix = 1e-6):
+	def fft(self, metric_prefix = None):
 		# remove dc component
 		y = self.y - np.mean(self.y)
 		
 		# fix scalling by converting to seconds
-		x = np.asarray(self.x) * metric_prefix
+		if metric_prefix == None:
+			x = np.asarray(self.x) * METRIC[self.units[0]]
+		else:
+			x = np.asarray(self.x) * metric_prefix
 
 		# Sample spacing
 		T = np.mean(np.diff(x))
@@ -248,8 +261,8 @@ class signal():
 		plt.plot(self.xf if fft else self.x, self.yf if fft else self.y)
 		
 		# Label the axes
-		plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
-		plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
+		plt.xlabel('Frequency (Hz)' if fft else 'Time ' + self.units[0])
+		plt.ylabel('Magnitude' if fft else 'Amplitude ' + self.units[1])
 		
 		# Add a title
 		plt.title('FFT of the Signal' if fft else 'Signal')
@@ -276,6 +289,9 @@ class run():
 		# Filter out any None results (in case of errors)
 		self.signals = [res for res in results if res is not None]
 
+		# Get units from signals
+		self.units = self.signals[0].units
+
 	@staticmethod
 	def load_signal(args):
 		f, flip = args
@@ -300,9 +316,9 @@ class run():
 		s, folder, plot_fft = args
 		s.plot(folder, fft=plot_fft)
 
-	def fft(self, mp=1e-6):
+	def fft(self, metric_prefix = None):
 		for s in self.signals:
-			s.fft(metric_prefix = mp)
+			s.fft(metric_prefix)
 
 	#Removes double peaked signal from the run using the 'signal.clean()'
 	#method above (unused)
@@ -422,8 +438,8 @@ class run():
 		x, avg_y = self.avg_signal(fft)
 		plt.plot(x, avg_y)
 		plt.title('Average FFT: ' + self.name if fft else 'Average Signal: ' + self.name)
-		plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
-		plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
+		plt.xlabel('Frequency (Hz)' if fft else 'Time ' + self.units[0])
+		plt.ylabel('Magnitude' if fft else 'Amplitude ' + self.units[1])
 		plt.ylim(bottom=ybottom, top=ytop)
 		plt.xlim(left=xleft, right=xright)
 		plt.show()
@@ -446,13 +462,17 @@ def plot_average_signals(A, B, filepath, fft=False, show=False):
 	plt.clf()
 
 	#Plot both average signals over time
-	plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
-	plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
+	if fft:
+		plt.plot(A_x,A_y,label=A.name)
+		plt.plot(B_x,B_y,label=B.name)
+	else:
+		plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
+		plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
 
 	#Add a title and axis labels to the plot
 	plt.title('Average signals')
-	plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
-	plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
+	plt.xlabel('Frequency (Hz)' if fft else 'Time ' + A.units[0])
+	plt.ylabel('Magnitude' if fft else 'Amplitude ' + A.units[1])
 
 	#Add a legend to the plot
 	plt.legend()
