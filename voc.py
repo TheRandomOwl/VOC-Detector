@@ -301,7 +301,7 @@ class run():
 
 	def fft(self, mp=1e-6):
 		for s in self.signals:
-			s.fft( metric_prefix = mp)
+			s.fft(metric_prefix = mp)
 
 	#Removes double peaked signal from the run using the 'signal.clean()'
 	#method above (unused)
