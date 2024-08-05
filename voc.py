@@ -446,8 +446,12 @@ def plot_average_signals(A, B, filepath, fft=False, show=False):
 	plt.clf()
 
 	#Plot both average signals over time
-	plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
-	plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
+	if fft:
+		plt.plot(A_x,A_y,label=A.name)
+		plt.plot(B_x,B_y,label=B.name)
+	else:
+		plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
+		plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
 
 	#Add a title and axis labels to the plot
 	plt.title('Average signals')
