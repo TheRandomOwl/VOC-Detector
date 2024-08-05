@@ -3,6 +3,9 @@ Code by: Eli Haynal
 Supervisor: Dr. Reinhard Schulte
 For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
+
+Modified by: Nathan Perry and Nathan Fisher
+Version: 2024-07-25
 '''
 
 
@@ -18,19 +21,26 @@ from sklearn.neural_network import MLPClassifier #A neural network object
 from sklearn.decomposition import PCA #Principal Components Analysis
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA #Linear Discriminant Analysis
 import pickle #A library for saving data in a python-readable format
-
-#Set the font for all figures generated
-plt.rcParams.update({'font.sans-serif':'Times New Roman'})
-
+import multiprocessing # A library for parallel processing
+from tqdm import tqdm # A library for progress bars
 
 #Load the decision algorithm for recognizing double-peaked signals
 with open('multi_nnet.p','rb') as f:
 	multi_nnet = pickle.load(f)
 
-#A function to calculate the moving average of a list of data
-def mvavg(dat, size):
-	a = [sum(dat[i:i+size])/size for i in range(len(dat)-size)]
-	return a
+def mvavg(x, y, window_size):
+	if window_size < 1 or window_size > len(y):
+		raise ValueError("Window size must be between 1 and the length of the input array.")
+	
+	# Calculate moving average
+	averages = np.convolve(y, np.ones(window_size)/window_size, mode='valid')
+	
+	# Align x with the moving average
+	start_index = window_size - 1
+	aligned_x = np.asarray(x[start_index: start_index + len(averages)])
+	aligned_x -= (aligned_x[0] - x[0]) / 2
+	
+	return aligned_x, averages
 
 #A function for integration by the trapezoidal rule
 def trap(x,y):
@@ -73,77 +83,54 @@ def tstats(sample1, sample2, evar = False):
 class signal():
 
 	#The function initiating each class instance from a specified .txt file
-	def __init__(self, infile, name = False, flip = False):
+	def __init__(self, infile, name = False, flip = False, baseline_shift = 0, smooth_window=0):
 
-		#Open the specified input file and read all of its lines into a list
-		with open(infile) as f:
-			reader = csv.reader(f,delimiter='\t')
-			self.dat = [row for row in reader]
-			#Eliminate the three header lines
-			self.dat = self.dat[3:]
-
-		#Set a name for the object so that it can be identified
-		self.name = infile
-		if name:
-			self.name = name
-		
 		#Flip the data only if specified
 		const = 1
 		if flip:
 			const = -1
 
-		#Create a list of the x values for the signal
-		self.x = [float(elm[0]) for elm in self.dat]
+		#Open the specified input file and read all of its lines into a list
+		with open(infile) as f:
+			reader = csv.reader(f,delimiter='\t')
+			data = [row for row in reader]
+			#Eliminate the three header lines
+			data = data[3:]
 
-		#Create a list of y values for the signal, flipping each
-		#if specified and moving them by 400 to zero the signal
-		self.y = [const*float(elm[1])-400 for elm in self.dat]
+			#Create a list of the x values for the signal
+			self.x = np.asarray([float(elm[0]) for elm in data])
 
-		#Get the (x,y) position of the peak value
-		self.max = min(self.y)
-		self.max_x = self.x[self.y.index(self.max)]
+			#Create a list of y values for the signal, flipping each
+			#if specified and moving them to zero the signal
+			self.y = np.asarray([const*float(elm[1])+baseline_shift for elm in data])
 
-		#Get the x values for the earliest and latest positions at which
-		#the signal reaches 90%, 50%, and 10% amplitudes
-		self.n = []
-		i = 0 
-		while self.y[i] > 0.9*self.max:
-			i += 1
-		self.n.append(i)
-		i = -1
-		while self.y[i] > 0.9*self.max:
-			i -= 1
-		self.n.append(i)
-		self.f = []
-		i = 0 
-		while self.y[i] > 0.5*self.max:
-			i += 1
-		self.f.append(i)
-		i = -1
-		while self.y[i] > 0.5*self.max:
-			i -= 1
-		self.f.append(i)
-		self.t = []
-		i = 0 
-		while self.y[i] > 0.1*self.max:
-			i += 1
-		self.t.append(i)
-		i = -1
-		while self.y[i] > 0.1*self.max:
-			i -= 1
-		self.t.append(i)
+		#Set a name for the object so that it can be identified
+		self.name = os.path.split(infile)[1]
+		if name:
+			self.name = name
 
-		#Calculate the 0-100% and 10-90% rise and fall times for the signal
-		self.risetime = self.max_x-self.x[self.t[0]]
-		self.falltime = self.x[self.t[1]] - self.max_x
-		self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
-		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
+		# True if flipped
+		self.flipped = flip
+
+		# Smooth the signal if specified
+		self.smooth(smooth_window)
 
 	#Generate a plot of the signal over time
-	def plot(self,folder):
-
-		#Add the (x,y) datapoints to the plot
-		plt.plot(self.x,self.y, 'o',markersize = 3)
+	def plot(self,folder,fft = False):
+		if fft:
+			plt.plot(self.xf,self.yf)
+			plt.title('FFT: ' + self.name)
+			plt.xlabel('Frequency (Hz)')
+			plt.ylabel('Magnitude (mV)')
+		else:
+			if self.flipped:
+				plt.ylim(-150,0)
+			else:
+				plt.ylim(-400,0)
+			plt.title(self.name)
+			plt.xlabel('Time (μs)')
+			plt.ylabel('Amplitude (mV)')
+			plt.plot(self.x,self.y)	
 
 		#Create the output folder if it does not already exist
 		if not os.path.isdir(folder):
@@ -185,57 +172,90 @@ class signal():
 			return True
 		else:
 			return False
+	
+	# Checks if there exists no peak and returns true if there isn't a peak else return false
+	def is_empty(self, threshold=-390):
+		if self.flipped:
+			raise ValueError("Cannot check for empty signal if signal is flipped")
+		return max(self.y) < threshold
 
-	#Smooth the signal using a 10-point moving average
-	#Recalculate many signal statistics using new, smoothed y values (see __init__ above)
-	def smooth(self):
-		self.y = mvavg(self.y,10)
-		self.x = self.x[:-10]
-		self.max = min(self.y)
-		self.max_x = self.x[self.y.index(self.max)]
-		self.n = []
-		i = 0 
-		while self.y[i] > 0.9*self.max:
-			i += 1
-		self.n.append(i)
-		i = -1
-		while self.y[i] > 0.9*self.max:
-			i -= 1
-		self.n.append(i)
-		self.f = []
-		i = 0 
-		while self.y[i] > 0.5*self.max:
-			i += 1
-		self.f.append(i)
-		i = -1
-		while self.y[i] > 0.5*self.max:
-			i -= 1
-		self.f.append(i)
-		self.t = []
-		i = 0 
-		while self.y[i] > 0.1*self.max:
-			i += 1
-		self.t.append(i)
-		i = -1
-		while self.y[i] > 0.1*self.max:
-			i -= 1
-		self.t.append(i)
+	#Smooth the signal using a moving average
+	#Recalculate fft and many signal statistics using new, smoothed y values
+	def smooth(self, window_size = 10):
+		if window_size == 0:
+			return
+		self.x, self.y = mvavg(self.x, self.y, window_size)
+		self.fft()
+		if self.flipped:
+			if np.max(self.y) >= 0:
+				raise ValueError("Cannot recalculate signal statistics, graph is above the x axis. Try changing the baseline shift")
+			self.max = np.min(self.y)
+			self.max_x = self.x[np.argmin(self.y)]
+			self.n = []
+			i = 0 
+			while self.y[i] > 0.9*self.max:
+				i += 1
+			self.n.append(i)
+			i = -1
+			while self.y[i] > 0.9*self.max:
+				i -= 1
+			self.n.append(i)
+			self.f = []
+			i = 0 
+			while self.y[i] > 0.5*self.max:
+				i += 1
+			self.f.append(i)
+			i = -1
+			while self.y[i] > 0.5*self.max:
+				i -= 1
+			self.f.append(i)
+			self.t = []
+			i = 0 
+			while self.y[i] > 0.1*self.max:
+				i += 1
+			self.t.append(i)
+			i = -1
+			while self.y[i] > 0.1*self.max:
+				i -= 1
+			self.t.append(i)
 
-		self.risetime = self.max_x-self.x[self.t[0]]
-		self.falltime = self.x[self.t[1]] - self.max_x
-		self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
-		self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
+			self.risetime = self.max_x-self.x[self.t[0]]
+			self.falltime = self.x[self.t[1]] - self.max_x
+			self.tnrise = self.x[self.n[0]]-self.x[self.t[0]]
+			self.tnfall = self.x[self.t[1]]-self.x[self.n[1]]
 
 	#Calculate the Fast-Fourier transform of the signal
-	def fft(self):
-		#Number of samples
-		N = len(s.y)
-		#Sampling rate
-		T = 0.000000024
-		#FFT y-values
-		self.yf = scipy.fft.fft(s.y)
-		#FFT frequency scale
-		self.xf = scipy.fft.fftfreq(N, T)[:N//2]
+	def fft(self, metric_prefix = 1e-6):
+		# remove dc component
+		y = self.y - np.mean(self.y)
+		
+		# fix scalling by converting to seconds
+		x = np.asarray(self.x) * metric_prefix
+
+		# Sample spacing
+		T = np.mean(np.diff(x))
+		n = len(x)
+		
+		fft_values = np.fft.fft(y)
+		fft_frequncies = np.fft.fftfreq(n, d=T)
+		magnitude = np.abs(fft_values) / n
+		self.yf = np.asarray(magnitude[:n//2])
+		self.xf = np.asarray(fft_frequncies[:n//2])
+
+	# Plot the magnitude of the FFT results
+	def show_signal(self, fft=False):
+		# Plot the frequency vs. magnitude
+		plt.plot(self.xf if fft else self.x, self.yf if fft else self.y)
+		
+		# Label the axes
+		plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
+		plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
+		
+		# Add a title
+		plt.title('FFT of the Signal' if fft else 'Signal')
+		
+		# Display the plot
+		plt.show()
 
 #A class (custom python datatype) for representing a sample of signals
 class run():
@@ -243,27 +263,26 @@ class run():
 	#A function creating the run data object from a specified folder of .txt files
 	def __init__(self, foldername, flip = False):
 
-		#Creating a name that is the same as the folder name
-		self.name = os.path.split(foldername)[-1]
+		self.name = os.path.split(foldername)[1]
+		
+		# Get the list of files to be processed and filter out hidden files
+		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.']
 
-		#Create a signal object (see above) from every .txt file in the specified folder
-		#create a list of these signal objects for this run object
-		self.signals = []
-		i = 0
-		l = os.listdir(foldername)
-		l = [filename for filename in l if filename[0] != '.']
-		for filename in l:
-			f = os.path.join(foldername, filename)
-			try:
-				self.signals.append(signal(f,name = filename,flip = flip))
-			
-			#Skip loading a signal if a 'NaN' value is encountered
-			except ValueError:
-				pass
-			i += 1
+		# Create a pool of worker processes
+		with multiprocessing.Pool() as pool:
+			# Use pool.map to parallelize the loading of signals
+			results = list(tqdm(pool.imap(self.load_signal, [(f, flip) for f in files]), total=len(files), desc="Loading files"))
 
-			#Print a progress message
-			print(f'Loading files for {self.name}, {i} of {len(l)} complete.',end = '\r')
+		# Filter out any None results (in case of errors)
+		self.signals = [res for res in results if res is not None]
+
+	@staticmethod
+	def load_signal(args):
+		f, flip = args
+		try:
+			return signal(f, flip=flip)
+		except ValueError:
+			return None
 
 	#A function defining how a run object is represented when printed
 	#to the command line, etc. Increases readability.
@@ -271,12 +290,19 @@ class run():
 		return(self.name)
 	
 	#Plots every signal in the run to a specified folder	
-	def plot(self,folder):
-		i = 0
+	def plot(self,folder,fft = False):
+		with multiprocessing.Pool() as pool:
+			# Use pool.map to parallelize the plotting of signals and us tqdm to show progress
+			list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Plotting signals"))
+
+	@staticmethod
+	def plot_signals(args):
+		s, folder, plot_fft = args
+		s.plot(folder, fft=plot_fft)
+
+	def fft(self, mp=1e-6):
 		for s in self.signals:
-			s.plot(folder)
-			i += 1
-			print(f'Plotting signals for {self.name}, {i} of {len(self.signals)} complete.',end='\r')
+			s.fft(metric_prefix = mp)
 
 	#Removes double peaked signal from the run using the 'signal.clean()'
 	#method above (unused)
@@ -286,6 +312,21 @@ class run():
 			if not signal.multimodal():
 				new.append(signal)
 		self.signals = new
+
+	def clean_empty(self):
+		new = []
+		for signal in self.signals:
+			if not signal.is_empty():
+				new.append(signal)
+		self.signals = new
+
+	def not_clean_empty(self):
+		new = []
+		for signal in self.signals:
+			if signal.is_empty():
+				new.append(signal)
+		self.signals = new
+				
 
 	#Calculates time values t for each signal in the run for which the integral
 	#from 0 to t represents 90%, 50%, or 10% of the total area under the curve
@@ -355,96 +396,73 @@ class run():
 	
 	#Smooth each signal in the run with a 10-point moving average
 	def smooth(self):
-		for s in self.signals:
-			s.smooth()
+		with multiprocessing.Pool() as pool:
+			# Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
+			self.signals = list(tqdm(pool.imap(self.smooth_signals, self.signals), 
+							total=len(self.signals), desc="Smoothing signals"))
+	
+	@staticmethod
+	def smooth_signals(s):
+		s.smooth()
+		return s
 
+	def avg_signal(self, fft):
+		# Extract the y or yf arrays
+		y_arrays = [s.yf if fft else s.y for s in self.signals]
+		
+		# Stack the arrays along a new axis and compute the mean
+		avg_y = np.mean(np.stack(y_arrays), axis=0)
+		
+		# Extract the corresponding x or xf array (assuming they are the same for all signals)
+		x = self.signals[0].xf if fft else self.signals[0].x
+		
+		return x, avg_y
 
-
-#Some code blocks that I used in the past to plot data for runs and/or signals
-#it was useful to keep them here to copy and paste if I needed reference code
-#to make a plot similar to something I had done before, but they are largely
-#unnecessary now
-'''
-#SAMPLE PLOTTING
-
-plt.boxplot([prop.nineties, phen.nineties])
-plt.tight_layout()
-plt.savefig('boxplot.png')
-plt.clf()
-
-plt.bar(['Propane','Phenol'],[np.mean(prop24.nineties), np.mean(phen24.nineties)],yerr = [scipy.stats.sem(prop24.nineties),scipy.stats.sem(phen24.nineties)],capsize = 5)
-plt.savefig('barplot.png')
-plt.clf()
-
-plt.plot(prop24.nineties,prop24.fifties,'o',markersize=3,label='Propane')
-plt.plot(phen24.nineties,phen24.fifties,'o',markersize=3,label='Phenol')
-plt.title('Clustering for 90% vs 50% area times post-cleaning')
-plt.xlabel('Time for 90% area')
-plt.ylabel('Time for 50% area')
-plt.legend()
-plt.savefig('test.png')
-plt.clf()
-
-#xmin, xmax = plt.xlim()
-#x = np.linspace(xmin, xmax, 100)
-#mu, std = scipy.stats.norm.fit(proplarge.nineties)
-#p = scipy.stats.norm.pdf(x, mu, std)
-#plt.plot(x, p, 'k', linewidth=2)
-
-plt.hist(phen18.nineties, bins = 30,density=True)
-plt.title('Distribution of 90% area times for phenol')
-plt.xlabel('Time for 90% area')
-plt.ylabel('Number of signals observed')
-plt.savefig('hist_phen18.png')
-plt.clf()
-
-#PLOT FFT
-plt.clf()
-plt.plot(xf, 2.0/N * np.abs(yf[:N//2]))
-plt.xlabel('Frequency')
-plt.ylabel('Amplitude')
-plt.title('FFT specturm')
-plt.savefig('fft_test.png')
-plt.clf()
-'''
+	def show_avg_signal(self, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
+		x, avg_y = self.avg_signal(fft)
+		plt.plot(x, avg_y)
+		plt.title('Average FFT: ' + self.name if fft else 'Average Signal: ' + self.name)
+		plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
+		plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
+		plt.ylim(bottom=ybottom, top=ytop)
+		plt.xlim(left=xleft, right=xright)
+		plt.show()
+		
 
 #A function that plots the average signals for two runs
 #useful for subjectively identifying typical signal differences between
 #two treatments
-def plot_average_signals(propane, phenol, filepath):
+def plot_average_signals(A, B, filepath, fft=False, show=False):
 
 	#For each time value at which a y value was recorded, average
 	#the y value at that time for every signal in the first run
 	#make a new list of all these averages over time
-	avg_prop_y = []
-	for i in range(len(propane.signals[0].y)):
-		avg_prop_y.append(sum([s.y[i] for s in propane.signals])/len(propane.signals))
-	avg_prop_x = propane.signals[0].x
+	A_x, A_y = A.avg_signal(fft)
 	
 	#Repeat for the second run
-	avg_phen_y = []
-	for i in range(len(phenol.signals[0].y)):
-		avg_phen_y.append(sum([s.y[i] for s in phenol.signals])/len(phenol.signals))
-	avg_phen_x = phenol.signals[0].x
+	B_x, B_y = B.avg_signal(fft)
 
 	#Clear the plotting tool
 	plt.clf()
 
 	#Plot both average signals over time
-	plt.plot(avg_prop_x,avg_prop_y,'o',markersize=3,label=propane.name)
-	plt.plot(avg_phen_x,avg_phen_y,'o',markersize=3,label=phenol.name)
+	plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
+	plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
 
 	#Add a title and axis labels to the plot
 	plt.title('Average signals')
-	plt.xlabel('Time')
-	plt.ylabel('Voltage (mV)')
+	plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
+	plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
 
 	#Add a legend to the plot
 	plt.legend()
 
 	#Save the plot at the specified location with an auto-generated name
 	#and clear the plotting tool
-	plt.savefig(os.path.join(filepath,propane.name+'_'+phenol.name+'_average_signals.png'))
+	if show:
+		plt.show()
+	else:
+		plt.savefig(os.path.join(filepath,A.name+'_'+B.name+'_average_signals.png'))
 	plt.clf()
 
 #A function that plots each signal in two runs as an (x,y) datapoints
@@ -637,190 +655,3 @@ def save(runs):
 	with open('saved_run_objects.p','wb') as f:
 		pickle.dump(runs,f)
 	return
-
-#An old code block for loading in data to the dicionary object type
-#mentioned above which would subsequently be saved using the 'save'
-#function above.
-#Unused but useful as a reference for what steps are done to a run
-#when it is loaded and in what order.
-#Functions here are described under the 'run' class above.
-'''
-dat = {}
-for date in ['0418','0424','0428']:
-	propane = run('Prop'+date,flip=True)
-	propane.nnet_clean()
-	propane.smooth()
-	propane.remake_stats()
-	propane.new_stats()
-	phenol = run('Phen'+date,flip=True)
-	phenol.nnet_clean()
-	phenol.smooth()
-	phenol.remake_stats()
-	phenol.new_stats()
-	temp = {}
-	temp['propane'] = propane
-	temp['phenol'] = phenol
-	dat[date+'2023'] = temp
-'''
-
-
-#UNFINISHED: Note, everything beyond this point is functional, but not yet
-#fully codified as functions and objects to be used on arbitrary
-#sets of data. This means that there are frequent references to specific
-#runs used only for the purpose of example.
-
-
-#This line tells the code to run the block below (comprising the rest of the code)
-#only if this file was run directly and not opened by another file
-#(e.g. opened by the code handling the user interface since it needs
-#the functions from this code)
-if __name__=='__main__':
-
-	#Load the stored data mentioned in the 'save' function above
-	with open('saved_run_objects.p','rb') as f:
-		dat = pickle.load(f)
-	
-	#Load a couple of saved runs using easy-to-type variable names
-	#for ease of use 
-	prop = dat['04282023']['propane']
-	phen = dat['04282023']['phenol']	
-
-	#Principal Components Analysis and Linear Discriminant Analysis
-
-	#Convert the two runs' signals to 12-element datapoints
-	data = runs_to_points([prop, phen])
-	
-	#This line normalizes the set of points on a parameter-by-parameter
-	#basis, which is necessary for representing the coefficient importances
-	#of a later LDA on these points but does not change the LDA's predictive
-	#power
-	#data = [[(point-np.mean(elm))/np.std(elm) for point in elm] for elm in data]
-	
-	#Split the data into run1 and run2
-	a = data[:len(prop.signals)]
-	b = data[len(prop.signals):]
-	
-	#Create a principle components analysis object (from the sklearn library)
-	pca = PCA(n_components = 2)
-
-	#Fit the data according to PCA and store the transformed version
-	new = pca.fit_transform(a+b)
-
-	#Split the transformed data into two sets again
-	anew = new[:len(a)]
-	bnew = new[len(a):]
-	
-	#Clear the plotting tool
-	plt.clf()
-
-	#Plot each set of datapoints
-	plt.plot([elm[0] for elm in anew],[elm[1] for elm in anew],'.',markersize=3,alpha=0.5,label='Propane')
-	plt.plot([elm[0] for elm in bnew],[elm[1] for elm in bnew],'.',markersize=3,alpha=0.5,label='Phenol')
-	
-	#Add axis labels, a title, and a legend to the figure
-	plt.xlabel('Component 1')
-	plt.ylabel('Component 2')
-	plt.title('Principle Components Analysis of 4/28/2023 data')
-	plt.legend()
-
-	#Save the figure to the same directory as the script with a
-	#predetermined file name
-	plt.savefig('pca_04282023.png')
-	plt.clf()
-
-	#A list of row labels to use when generating a table for PCA
-	#weights
-	rowlabels = ['90% area time', '50% area time', '10% area time',
-	'Amplitude', 'Width at 90% amplitude', 'Width at 50% amplitude',
-	'Area between 90% amplitudes', 'Area between 50% amplitudes', 'Rise time 0 to max',
-	'Fall time max to 0', 'Rise time 10% to 90%', 'Fall time 90% to 10%'
-	]
-	#A list of column lables to use when generating a table
-	collabels = ('','Component 1','Component 2')
-
-	#Create a list with 12 rows (1 for each parameter)
-	#where the first column (first element in each row) denotes
-	#the weight of that parameter when calculating the first PCA parameter
-	#and the second column does the same for the second PCA parameter
-	table = list(zip(rowlabels,np.around(pca.components_[0],4),np.around(pca.components_[1],4)))
-	
-	#Add the header row and a row at the bottom denoting the proportion
-	#of variance in the data explained by each PCA parameter
-	table = [collabels] + table + [('','',''),('Explained Variance Ratio',str(np.around(pca.explained_variance_ratio_[0],3)),str(np.around(pca.explained_variance_ratio_[1],3)))]
-	
-	#Open a predetermined output CSV file
-	with open('pca_table_04282023.csv','w',newline='') as f:
-		writer = csv.writer(f,delimiter = ',')
-		
-		#Write each row in the table to the output file
-		for row in table:
-			writer.writerow(row)
-	
-	
-	#Create a linear discriminant object (from the sklearn library)
-	lda = LDA()
-
-	#Fit the LDA to the data and store the transformed data
-	#An LDA algorithmically reduces the data to a single dimension
-	#best explaining the difference between the two classes
-	#and algorithmically determines a cuttoff value maximizing class
-	#separation along the single resulting axis
-	new = lda.fit_transform(a+b,[1 for elm in a]+[2 for elm in b])
-
-	#Reseparate the transformed data into two sets of datapoints
-	anew = new[:len(a)]
-	bnew = new[len(a):]
-
-	#Calculate the LDA cutoff value so that it can be plotted
-	cutoff = np.mean([np.mean(anew),np.mean(bnew)])
-	
-	#Clear the plotting tool
-	plt.clf()
-
-	#Plot each set of datapoints with x-value being their LDA-transformed
-	#coordinate and y-value denoting which run they came from
-	#(to assess class separation)
-	plt.plot([elm[0] for elm in anew],[1 for elm in anew],'o',markersize=3,label='Propane')
-	plt.plot([elm[0] for elm in bnew],[2 for elm in bnew],'o',markersize=3,label='Phenol')
-	
-	#Plot a vertical line at the LDA cutoff value
-	plt.vlines(x=cutoff,color='red',ymin=0.9,ymax=2.1)
-	
-	#Add a figure title, axis labels, and a legend
-	plt.xlabel('LDA Transformed Value')
-	plt.ylabel('Datapoint Class')
-	plt.legend()
-	
-	#Save the figure with a predetermined name
-	plt.savefig('lda_04282023.png')
-	plt.clf()
-	
-	#A code block that plots a bar graph of the importance of each
-	#parameter when calculating the LDA value of a datapoint
-	#This can be used when an LDA is performed on normalized points
-	#(see above)
-	'''
-	plt.clf()
-	plt.bar(range(len(rowlabels)),list(lda.coef_[0]))
-	plt.xticks(range(len(rowlabels)), rowlabels, rotation='vertical')
-	plt.ylabel('Importance to LDA Classification')
-	plt.subplots_adjust(bottom=0.4)
-	plt.savefig('lda_importances_04282023.png')
-	plt.clf()
-	'''
-	
-	#Export the data for an LDA object to a csv file
-	#Create a table of coefficients with row labels for the corresponding
-	#parameters
-	table = list(zip(rowlabels,list(lda.coef_[0])))
-
-	#Opened a predetermine output file
-	with open('lda_table_04282023.csv','w',newline='') as f:
-		writer = csv.writer(f,delimiter=',')
-
-		#Write a header row
-		writer.writerow(('Parameter','Weight in LDA'))
-
-		#Write each row of coefficients
-		for row in table:
-			writer.writerow(row)
