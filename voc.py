@@ -180,11 +180,12 @@ class signal():
 		return max(self.y) < threshold
 
 	#Smooth the signal using a moving average
-	#Recalculate many signal statistics using new, smoothed y values
+	#Recalculate fft and many signal statistics using new, smoothed y values
 	def smooth(self, window_size = 10):
 		if window_size == 0:
 			return
 		self.x, self.y = mvavg(self.x, self.y, window_size)
+		self.fft()
 		if self.flipped:
 			if np.max(self.y) >= 0:
 				raise ValueError("Cannot recalculate signal statistics, graph is above the x axis. Try changing the baseline shift")
