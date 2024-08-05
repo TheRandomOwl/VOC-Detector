@@ -83,7 +83,7 @@ def tstats(sample1, sample2, evar = False):
 class signal():
 
 	#The function initiating each class instance from a specified .txt file
-	def __init__(self, infile, name = False, flip = False, baseline_shift = 0):
+	def __init__(self, infile, name = False, flip = False, baseline_shift = 0, smooth_window=0):
 
 		#Flip the data only if specified
 		const = 1
@@ -111,6 +111,9 @@ class signal():
 
 		# True if flipped
 		self.flipped = flip
+
+		# Smooth the signal if specified
+		self.smooth(smooth_window)
 
 	#Generate a plot of the signal over time
 	def plot(self,folder,fft = False):
@@ -179,6 +182,8 @@ class signal():
 	#Smooth the signal using a moving average
 	#Recalculate many signal statistics using new, smoothed y values
 	def smooth(self, window_size = 10):
+		if window_size == 0:
+			return
 		self.x, self.y = mvavg(self.x, self.y, window_size)
 		if self.flipped:
 			if np.max(self.y) >= 0:
