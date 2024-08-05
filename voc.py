@@ -404,19 +404,25 @@ class run():
 	def smooth_signals(s):
 		s.smooth()
 		return s
-	
-	def avg_fft(self):
-		self.avg_yf = np.zeros(len(self.signals[0].yf))
-		for s in self.signals:
-			self.avg_yf += s.yf
-		self.avg_yf = self.avg_yf / len(self.signals)
-		self.avg_xf = self.signals[0].xf
 
-	def show_avg_fft(self, ybottom=0, ytop=None, xleft=0, xright=None):
-		plt.plot(self.avg_xf, self.avg_yf)
-		plt.title('Average FFT: ' + self.name)
-		plt.xlabel('Frequency (Hz)')
-		plt.ylabel('Magnitude')
+	def avg_signal(self, fft):
+		# Extract the y or yf arrays
+		y_arrays = [s.yf if fft else s.y for s in self.signals]
+		
+		# Stack the arrays along a new axis and compute the mean
+		avg_y = np.mean(np.stack(y_arrays), axis=0)
+		
+		# Extract the corresponding x or xf array (assuming they are the same for all signals)
+		x = self.signals[0].xf if fft else self.signals[0].x
+		
+		return x, avg_y
+
+	def show_avg_signal(self, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
+		x, avg_y = self.avg_signal(fft)
+		plt.plot(x, avg_y)
+		plt.title('Average FFT: ' + self.name if fft else 'Average Signal: ' + self.name)
+		plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
+		plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
 		plt.ylim(bottom=ybottom, top=ytop)
 		plt.xlim(left=xleft, right=xright)
 		plt.show()
