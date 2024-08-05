@@ -432,40 +432,37 @@ class run():
 #A function that plots the average signals for two runs
 #useful for subjectively identifying typical signal differences between
 #two treatments
-def plot_average_signals(propane, phenol, filepath):
+def plot_average_signals(A, B, filepath, fft=False, show=False):
 
 	#For each time value at which a y value was recorded, average
 	#the y value at that time for every signal in the first run
 	#make a new list of all these averages over time
-	avg_prop_y = []
-	for i in range(len(propane.signals[0].y)):
-		avg_prop_y.append(sum([s.y[i] for s in propane.signals])/len(propane.signals))
-	avg_prop_x = propane.signals[0].x
+	A_x, A_y = A.avg_signal(fft)
 	
 	#Repeat for the second run
-	avg_phen_y = []
-	for i in range(len(phenol.signals[0].y)):
-		avg_phen_y.append(sum([s.y[i] for s in phenol.signals])/len(phenol.signals))
-	avg_phen_x = phenol.signals[0].x
+	B_x, B_y = B.avg_signal(fft)
 
 	#Clear the plotting tool
 	plt.clf()
 
 	#Plot both average signals over time
-	plt.plot(avg_prop_x,avg_prop_y,'o',markersize=3,label=propane.name)
-	plt.plot(avg_phen_x,avg_phen_y,'o',markersize=3,label=phenol.name)
+	plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
+	plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
 
 	#Add a title and axis labels to the plot
 	plt.title('Average signals')
-	plt.xlabel('Time (μs)')
-	plt.ylabel('Voltage (mV)')
+	plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
+	plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
 
 	#Add a legend to the plot
 	plt.legend()
 
 	#Save the plot at the specified location with an auto-generated name
 	#and clear the plotting tool
-	plt.savefig(os.path.join(filepath,propane.name+'_'+phenol.name+'_average_signals.png'))
+	if show:
+		plt.show()
+	else:
+		plt.savefig(os.path.join(filepath,A.name+'_'+B.name+'_average_signals.png'))
 	plt.clf()
 
 #A function that plots each signal in two runs as an (x,y) datapoints
