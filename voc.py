@@ -242,21 +242,16 @@ class signal():
 		self.xf = np.asarray(fft_frequncies[:n//2])
 
 	# Plot the magnitude of the FFT results
-	def show_fft(self):
-		yf_magnitude = np.abs(self.yf[:len(self.xf)])
-		
-		# Create a plot
-		plt.figure(figsize=(10, 6))
-		
+	def show_signal(self, fft=False):
 		# Plot the frequency vs. magnitude
-		plt.plot(self.xf, yf_magnitude)
+		plt.plot(self.xf if fft else self.x, self.yf if fft else self.y)
 		
 		# Label the axes
-		plt.xlabel('Frequency (Hz)')
-		plt.ylabel('Magnitude')
+		plt.xlabel('Frequency (Hz)' if fft else 'Time (μs)')
+		plt.ylabel('Magnitude' if fft else 'Amplitude (mV)')
 		
 		# Add a title
-		plt.title('FFT of the Signal')
+		plt.title('FFT of the Signal' if fft else 'Signal')
 		
 		# Display the plot
 		plt.show()
