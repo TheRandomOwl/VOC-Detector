@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.1.1
+Version: 2.1.2
 '''
 
 
@@ -17,9 +17,6 @@ import scipy.fft #A library for computing ffts
 import scipy.stats #A library with statistical tools
 import csv #A library for reading and writing csv files
 import os #A library for loading and writing to the filesystem more easily
-from sklearn.neural_network import MLPClassifier #A neural network object
-from sklearn.decomposition import PCA #Principal Components Analysis
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA #Linear Discriminant Analysis
 import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
@@ -29,10 +26,6 @@ METRIC = {
 	'(ms)': 1e-3,
 	'(s)': 1
 }
-
-#Load the decision algorithm for recognizing double-peaked signals
-with open('multi_nnet.p','rb') as f:
-	multi_nnet = pickle.load(f)
 
 def mvavg(x, y, window_size):
 	if window_size < 1 or window_size > len(y):
@@ -171,14 +164,6 @@ class signal():
 		if len(find_peaks(self.y,width = 100,distance=500)[0]) > 0:
 			return True
 		elif len(find_peaks([-1*y for y in self.y],width = 10,distance=500,height=100)[0]) != 1:
-			return True
-		else:
-			return False
-
-	#Determine if the signal has multiple peaks using a neural network
-	#this version is currently in use
-	def nnet_multimodal(self):
-		if multi_nnet.predict([self.y])[0] == 1:
 			return True
 		else:
 			return False
