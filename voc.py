@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.1.2
+Version: 2.1.3
 '''
 
 
@@ -28,6 +28,18 @@ METRIC = {
 }
 
 def mvavg(x, y, window_size):
+	"""
+	Calculate the moving average of an input array 'y' with a given window size.
+	Parameters:
+		x (array-like): The input array of x-values.
+		y (array-like): The input array of y-values.
+		window_size (int): The size of the moving average window.
+	Returns:
+		aligned_x (ndarray): The x-values aligned with the moving average.
+		averages (ndarray): The calculated moving averages.
+	Raises:
+		ValueError: If the window size is less than 1 or greater than the length of the input array.
+	"""
 	if window_size < 1 or window_size > len(y):
 		raise ValueError("Window size must be between 1 and the length of the input array.")
 	
@@ -78,8 +90,16 @@ def tstats(sample1, sample2, evar = False):
 	print(scipy.stats.ttest_ind(sample1,sample2,equal_var=evar))
 	print(scipy.stats.ranksums(sample1,sample2))
 
-#A class (custon python datatype) designed to represent signal files
 class signal():
+	"""
+	Class representing a signal.
+	Attributes:
+		units (list): List of units of the signal.
+		x (ndarray): Array of x values for the signal.
+		y (ndarray): Array of y values for the signal.
+		name (str): Name of the signal.
+		flipped (bool): True if the signal is flipped, False otherwise.
+	"""
 
 	#The function initiating each class instance from a specified .txt file
 	def __init__(self, infile, name = False, flip = False, baseline_shift = 0, smooth_window=0):
@@ -118,8 +138,15 @@ class signal():
 		# Smooth the signal if specified
 		self.smooth(smooth_window)
 
-	#Generate a plot of the signal over time
 	def plot(self,folder,fft = False):
+		"""
+		Generate and save a plot of the signal or its FFT.
+		Parameters:
+			folder (str): Directory to save the plot image. Created if it doesn't exist.
+			fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
+		Returns:
+			None
+		"""
 		if fft:
 			plt.plot(self.xf,self.yf)
 			plt.title('FFT: ' + self.name)
@@ -170,13 +197,25 @@ class signal():
 	
 	# Checks if there exists no peak and returns true if there isn't a peak else return false
 	def is_empty(self, threshold=-390):
+		"""
+		Check if there exists no peak in the signal.
+		Parameters:
+			threshold (int, optional): Threshold to determine peak existence. Default is -390.
+		Returns:
+			bool: True if there is no peak above the threshold, False otherwise.
+		"""
 		if self.flipped:
 			raise ValueError("Cannot check for empty signal if signal is flipped")
 		return max(self.y) < threshold
 
-	#Smooth the signal using a moving average
-	#Recalculate fft and many signal statistics using new, smoothed y values
 	def smooth(self, window_size = 10):
+		"""
+		Smooth the signal using a moving average and recalculate FFT and signal statistics.
+		Parameters:
+			window_size (int, optional): Window size for smoothing. Default is 10.
+		Returns:
+			None
+		"""
 		if window_size == 0:
 			return
 		self.x, self.y = mvavg(self.x, self.y, window_size)
@@ -221,10 +260,18 @@ class signal():
 
 	#Calculate the Fast-Fourier transform of the signal
 	def fft(self, metric_prefix = None):
+		"""
+		Calculate the Fast-Fourier transform of the signal.
+		Parameters:
+			metric_prefix (optional): The units of the time axis of the signal,
+			such as "(um)", "(ms)" or "(s)" . Default is the value of self.units[0].
+		Returns:
+			None
+		"""
 		# remove dc component
 		y = self.y - np.mean(self.y)
 		
-		# fix scalling by converting to seconds
+		# Convert signal time axis to seconds
 		if metric_prefix == None:
 			x = np.asarray(self.x) * METRIC[self.units[0]]
 		else:
@@ -242,6 +289,13 @@ class signal():
 
 	# Plot the magnitude of the FFT results
 	def show_signal(self, fft=False):
+		"""
+		Show a graph of the signal.
+		Parameters:
+			fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
+		Returns:
+			None
+		"""
 		# Plot the frequency vs. magnitude
 		plt.plot(self.xf if fft else self.x, self.yf if fft else self.y)
 		
@@ -257,9 +311,22 @@ class signal():
 
 #A class (custom python datatype) for representing a sample of signals
 class run():
+	"""
+	Class representing a run of signals.
+	Attributes:
+		name (str): Name of the run.
+		signals (list): List of signal objects in the run.
+		units (list): List of units of the signals in the run.
+	"""
 
 	#A function creating the run data object from a specified folder of .txt files
 	def __init__(self, foldername, flip = False):
+		"""
+		Initialize a run instance from a specified folder of .txt files.
+		Parameters:
+			foldername (str): Path to the folder containing .txt files.
+			flip (bool, optional): If True, flip the signals. Default is False.
+		"""
 
 		self.name = os.path.split(foldername)[1]
 		
@@ -290,8 +357,15 @@ class run():
 	def __repr__(self):
 		return(self.name)
 	
-	#Plots every signal in the run to a specified folder	
 	def plot(self,folder,fft = False):
+		"""
+		Plot every signal in the run to a specified folder.
+		Parameters:
+			folder (str): Directory to save the plot images.
+			fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
+		Returns:
+			None
+		"""
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the plotting of signals and us tqdm to show progress
 			list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Plotting signals"))
@@ -302,12 +376,23 @@ class run():
 		s.plot(folder, fft=plot_fft)
 
 	def fft(self, metric_prefix = None):
+		"""
+		Calculate the FFT for every signal in the run.
+		Parameters:
+			metric_prefix (optional): The units of the time axis of the signal,
+			such as "(um)", "(ms)" or "(s)" . Default is the value of self.units[0].
+		Returns:
+			None
+		"""
 		for s in self.signals:
 			s.fft(metric_prefix)
 
-	#Removes double peaked signal from the run using the 'signal.clean()'
-	#method above (unused)
 	def clean(self):
+		"""
+		Remove double-peaked signals from the run.
+		Returns:
+			None
+		"""
 		new = []
 		for signal in self.signals:
 			if not signal.multimodal():
@@ -315,6 +400,11 @@ class run():
 		self.signals = new
 
 	def clean_empty(self):
+		"""
+		Remove signals without peaks from the run.
+		Returns:
+			None
+		"""
 		new = []
 		for signal in self.signals:
 			if not signal.is_empty():
@@ -322,6 +412,11 @@ class run():
 		self.signals = new
 
 	def not_clean_empty(self):
+		"""
+		Keep only signals without peaks in the run.
+		Returns:
+			None
+		"""
 		new = []
 		for signal in self.signals:
 			if signal.is_empty():
@@ -395,8 +490,12 @@ class run():
 			#Print a progress message
 			print(f'Calculating statistics for {self.name}, {i} of {len(self.signals)} complete.',end = '\r')
 	
-	#Smooth each signal in the run with a 10-point moving average
 	def smooth(self):
+		"""
+		Smooth each signal in the run with a 10-point moving average.
+		Returns:
+			None
+		"""
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
 			self.signals = list(tqdm(pool.imap(self.smooth_signals, self.signals), 
@@ -408,6 +507,13 @@ class run():
 		return s
 
 	def avg_signal(self, fft):
+		"""
+		Calculate the average signal or FFT for the run.
+		Parameters:
+			fft (bool): If True, calculate the average FFT. If False, calculate the average time-domain signal.
+		Returns:
+			tuple: Arrays of x-values and average y-values.
+		"""
 		# Extract the y or yf arrays
 		y_arrays = [s.yf if fft else s.y for s in self.signals]
 		
@@ -420,6 +526,17 @@ class run():
 		return x, avg_y
 
 	def show_avg_signal(self, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
+		"""
+		Plot and show the average signal or FFT for the run.
+		Parameters:
+			fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
+			ybottom (optional): Bottom limit for y-axis.
+			ytop (optional): Top limit for y-axis.
+			xleft (optional): Left limit for x-axis.
+			xright (optional): Right limit for x-axis.
+		Returns:
+			None
+		"""
 		x, avg_y = self.avg_signal(fft)
 		plt.plot(x, avg_y)
 		plt.title('Average FFT: ' + self.name if fft else 'Average Signal: ' + self.name)
@@ -429,18 +546,21 @@ class run():
 		plt.xlim(left=xleft, right=xright)
 		plt.show()
 		
-
-#A function that plots the average signals for two runs
-#useful for subjectively identifying typical signal differences between
-#two treatments
 def plot_average_signals(A, B, filepath, fft=False, show=False):
-
-	#For each time value at which a y value was recorded, average
-	#the y value at that time for every signal in the first run
-	#make a new list of all these averages over time
+	"""
+	Plot the average signal or FFT for two runs. Useful for subjectively identifying 
+	typical signal differences between two treatments.
+	Parameters:
+		fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
+		ybottom (optional): Bottom limit for y-axis.
+		ytop (optional): Top limit for y-axis.
+		xleft (optional): Left limit for x-axis.
+		xright (optional): Right limit for x-axis.
+	Returns:
+		None
+	"""
 	A_x, A_y = A.avg_signal(fft)
 	
-	#Repeat for the second run
 	B_x, B_y = B.avg_signal(fft)
 
 	#Clear the plotting tool
