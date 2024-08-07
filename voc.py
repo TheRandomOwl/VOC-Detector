@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.1.3
+Version: 2.1.4
 '''
 
 
@@ -206,7 +206,7 @@ class signal():
 		"""
 		if self.flipped:
 			raise ValueError("Cannot check for empty signal if signal is flipped")
-		return max(self.y) < threshold
+		return self.y.max() < threshold
 
 	def smooth(self, window_size = 10):
 		"""
