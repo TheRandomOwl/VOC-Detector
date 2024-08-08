@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.3.2
+Version: 2.3.3
 '''
 
 
@@ -103,6 +103,17 @@ class signal():
 
 	#The function initiating each class instance from a specified .txt file
 	def __init__(self, infile, name = False, flip = False, baseline_shift = 0, smooth_window=0):
+		"""
+		Initializes an instance of the Signal class.
+		Parameters:
+			infile (str): The path to the input file.
+			name (str, optional): The name of the object. If not provided, the name will be extracted from the input file path.
+			flip (bool, optional): Specifies whether to flip the data. Default is False.
+			baseline_shift (float, optional): The amount to shift the y values of the signal. Default is 0.
+			smooth_window (int, optional): The size of the window for smoothing the signal. Default is 0 (no smoothing).
+		Returns:
+		None
+		"""
 
 		#Flip the data only if specified
 		const = 1
@@ -144,8 +155,6 @@ class signal():
 		Parameters:
 			folder (str): Directory to save the plot image. Created if it doesn't exist.
 			fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
-		Returns:
-			None
 		"""
 		if fft:
 			plt.plot(self.xf,self.yf)
@@ -271,7 +280,7 @@ class signal():
 		Calculate the Fast-Fourier transform of the signal.
 		Parameters:
 			metric_prefix (optional): The units of the time axis of the signal,
-			such as "(um)", "(ms)" or "(s)" . Default is the value of self.units[0].
+			such as "(um)", "(ms)" or "(s)". Default is the value of self.units[0].
 		Returns:
 			None
 		"""
@@ -316,23 +325,28 @@ class signal():
 		# Display the plot
 		plt.show()
 
-#A class (custom python datatype) for representing a sample of signals
 class run():
 	"""
 	Class representing a run of signals.
 	Attributes:
 		name (str): Name of the run.
 		signals (list): List of signal objects in the run.
+		smoothed (bool): True if the signals are smoothed, False otherwise.
+		smoothness (int): The size of the window for smoothing the signals.
 		units (list): List of units of the signals in the run.
 	"""
 
-	#A function creating the run data object from a specified folder of .txt files
 	def __init__(self, foldername, flip = False, cache = True, smoothness = 'default'):
 		"""
 		Initialize a run instance from a specified folder of .txt files.
 		Parameters:
 			foldername (str): Path to the folder containing .txt files.
 			flip (bool, optional): If True, flip the signals. Default is False.
+			cache (bool, optional): If True, save the run object to cache. Default is True.
+			smoothness (int, optional): The size of the window for smoothing the signals. Default is 'default'.
+		Returns:
+			None
+			
 		"""
 		
 		# True if signals are smoothed
@@ -519,6 +533,8 @@ class run():
 	def smooth(self, smoothness = None):
 		"""
 		Smooth each signal in the run with a 10-point moving average.
+		Parameters:
+			smoothness (int, optional): The size of the window for smoothing the signals. Default is None.
 		Returns:
 			None
 		"""
@@ -580,11 +596,11 @@ def plot_average_signals(A, B, filepath, fft=False, show=False):
 	Plot the average signal or FFT for two runs. Useful for subjectively identifying 
 	typical signal differences between two treatments.
 	Parameters:
+		A (run): The first run.
+		B (run): The second run.
+		filepath (str): The directory to save the plot image.
 		fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
-		ybottom (optional): Bottom limit for y-axis.
-		ytop (optional): Top limit for y-axis.
-		xleft (optional): Left limit for x-axis.
-		xright (optional): Right limit for x-axis.
+		show (bool, optional): If True, display the plot. If False, save the plot. Default is False.
 	Returns:
 		None
 	"""
