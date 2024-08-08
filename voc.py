@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.2.0
+Version: 2.2.1
 '''
 
 
@@ -359,9 +359,12 @@ class run():
 		self.units = self.signals[0].units
 
 		# Try to save signals to cache
-		if cache:
-			with open("saved_run_objects.p", 'wb') as f:
-				pickle.dump(self, f)
+		try:
+			if cache:
+				with open("saved_run_objects.p", 'wb') as f:
+					pickle.dump(self, f)
+		except:
+			pass
 
 	@staticmethod
 	def load_signal(args):
@@ -787,3 +790,7 @@ def save(runs):
 	with open('saved_run_objects.p','wb') as f:
 		pickle.dump(runs,f)
 	return
+
+def load():
+	with open('saved_run_objects.p','rb') as f:
+		return pickle.load(f)
