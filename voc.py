@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.3.0
+Version: 2.3.1
 '''
 
 
@@ -335,17 +335,26 @@ class run():
 			flip (bool, optional): If True, flip the signals. Default is False.
 		"""
 		
+		# True if signals are smoothed
+		self.smoothed = smoothness == 'default' or smoothness > 0 or smoothness == None
+		self.smoothness = smoothness
+		
 		self.name = os.path.split(foldername)[1]
 
-		if cache:
-			try:
-				run_cache = load()
-				if self.name == run_cache.name:
-					self.signals = run_cache.signals
-					self.units = self.signals[0].units
-					return
-			except:
-				pass
+		try:
+			run_cache = load()
+			if cache and self.name == run_cache.name and not (not self.smoothed and run_cache.smoothed) and run_cache.smoothness == smoothness:
+				self.signals = run_cache.signals
+				self.units = run_cache.units
+				if self.smoothed and not run_cache.smoothed:
+					self.smooth(smoothness)
+					save(self)
+					print("Saved run to cache")
+				print("Loaded run from cache")
+				return
+		except FileNotFoundError:
+			pass
+
 		
 		# Get the list of files to be processed and filter out hidden files
 		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.']
@@ -362,16 +371,14 @@ class run():
 		self.units = self.signals[0].units
 		
 		# Smooth the signals
-		if smoothness == 'default':
-			self.smooth()
-		else:
-			self.smooth(smoothness)
+		self.smooth(smoothness)
 
 		# Try to save signals to cache
 		try:
 			if cache:
 				with open("saved_run_objects.p", 'wb') as f:
 					pickle.dump(self, f)
+					print("Saved run to cache")
 		except:
 			pass
 
@@ -515,6 +522,8 @@ class run():
 		Returns:
 			None
 		"""
+		if smoothness == 'default':
+			smoothness = None
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
 			self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]), 
