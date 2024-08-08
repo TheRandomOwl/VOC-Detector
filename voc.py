@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.3.3
+Version: 3.0.0
 '''
 
 
@@ -90,7 +90,7 @@ def tstats(sample1, sample2, evar = False):
 	print(scipy.stats.ttest_ind(sample1,sample2,equal_var=evar))
 	print(scipy.stats.ranksums(sample1,sample2))
 
-class signal():
+class Signal():
 	"""
 	Class representing a signal.
 	Attributes:
@@ -325,7 +325,7 @@ class signal():
 		# Display the plot
 		plt.show()
 
-class run():
+class Run():
 	"""
 	Class representing a run of signals.
 	Attributes:
@@ -400,7 +400,7 @@ class run():
 	def load_signal(args):
 		f, flip = args
 		try:
-			return signal(f, flip=flip)
+			return Signal(f, flip=flip)
 		except ValueError:
 			return None
 
