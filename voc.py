@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.1.5
+Version: 2.2.0
 '''
 
 
@@ -324,15 +324,25 @@ class run():
 	"""
 
 	#A function creating the run data object from a specified folder of .txt files
-	def __init__(self, foldername, flip = False):
+	def __init__(self, foldername, flip = False, cache = True):
 		"""
 		Initialize a run instance from a specified folder of .txt files.
 		Parameters:
 			foldername (str): Path to the folder containing .txt files.
 			flip (bool, optional): If True, flip the signals. Default is False.
 		"""
-
+		
 		self.name = os.path.split(foldername)[1]
+
+		if cache:
+			try:
+				run_cache = load()
+				if self.name == run_cache.name:
+					self.signals = run_cache.signals
+					self.units = self.signals[0].units
+					return
+			except:
+				pass
 		
 		# Get the list of files to be processed and filter out hidden files
 		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.']
@@ -347,6 +357,11 @@ class run():
 
 		# Get units from signals
 		self.units = self.signals[0].units
+
+		# Try to save signals to cache
+		if cache:
+			with open("saved_run_objects.p", 'wb') as f:
+				pickle.dump(self, f)
 
 	@staticmethod
 	def load_signal(args):
