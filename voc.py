@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.1.4
+Version: 2.1.5
 '''
 
 
@@ -408,18 +408,6 @@ class run():
 		new = []
 		for signal in self.signals:
 			if not signal.is_empty():
-				new.append(signal)
-		self.signals = new
-
-	def not_clean_empty(self):
-		"""
-		Keep only signals without peaks in the run.
-		Returns:
-			None
-		"""
-		new = []
-		for signal in self.signals:
-			if signal.is_empty():
 				new.append(signal)
 		self.signals = new
 				
