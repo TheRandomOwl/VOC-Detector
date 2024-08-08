@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 2.2.1
+Version: 2.3.0
 '''
 
 
@@ -222,6 +222,9 @@ class signal():
 		"""
 		if window_size == 0:
 			return
+		elif window_size == None:
+			window_size = 10
+		
 		self.x, self.y = mvavg(self.x, self.y, window_size)
 		self.fft()
 		if self.flipped:
@@ -324,7 +327,7 @@ class run():
 	"""
 
 	#A function creating the run data object from a specified folder of .txt files
-	def __init__(self, foldername, flip = False, cache = True):
+	def __init__(self, foldername, flip = False, cache = True, smoothness = 'default'):
 		"""
 		Initialize a run instance from a specified folder of .txt files.
 		Parameters:
@@ -357,6 +360,12 @@ class run():
 
 		# Get units from signals
 		self.units = self.signals[0].units
+		
+		# Smooth the signals
+		if smoothness == 'default':
+			self.smooth()
+		else:
+			self.smooth(smoothness)
 
 		# Try to save signals to cache
 		try:
@@ -500,7 +509,7 @@ class run():
 			#Print a progress message
 			print(f'Calculating statistics for {self.name}, {i} of {len(self.signals)} complete.',end = '\r')
 	
-	def smooth(self):
+	def smooth(self, smoothness = None):
 		"""
 		Smooth each signal in the run with a 10-point moving average.
 		Returns:
@@ -508,12 +517,13 @@ class run():
 		"""
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
-			self.signals = list(tqdm(pool.imap(self.smooth_signals, self.signals), 
+			self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]), 
 							total=len(self.signals), desc="Smoothing signals"))
 	
 	@staticmethod
-	def smooth_signals(s):
-		s.smooth()
+	def smooth_signals(args):
+		s, smoothness = args
+		s.smooth(smoothness)
 		return s
 
 	def avg_signal(self, fft):
