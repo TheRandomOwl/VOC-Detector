@@ -196,7 +196,7 @@ class signal():
 			return False
 	
 	# Checks if there exists no peak and returns true if there isn't a peak else return false
-	def is_empty(self, threshold=-390):
+	def is_empty(self, threshold=None):
 		"""
 		Check if there exists no peak in the signal.
 		Parameters:
@@ -206,6 +206,10 @@ class signal():
 		"""
 		if self.flipped:
 			raise ValueError("Cannot check for empty signal if signal is flipped")
+		
+		if threshold == None:
+			threshold = -390
+		
 		return self.y.max() < threshold
 
 	def smooth(self, window_size = 10):
@@ -399,7 +403,7 @@ class run():
 				new.append(signal)
 		self.signals = new
 
-	def clean_empty(self):
+	def clean_empty(self, threshold=None):
 		"""
 		Remove signals without peaks from the run.
 		Returns:
@@ -407,7 +411,7 @@ class run():
 		"""
 		new = []
 		for signal in self.signals:
-			if not signal.is_empty():
+			if not signal.is_empty(threshold):
 				new.append(signal)
 		self.signals = new
 				
