@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.0.0
+Version: 3.0.1
 '''
 
 
@@ -366,7 +366,7 @@ class Run():
 					print("Saved run to cache")
 				print("Loaded run from cache")
 				return
-		except FileNotFoundError:
+		except:
 			pass
 
 		
