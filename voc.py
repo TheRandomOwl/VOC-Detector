@@ -156,7 +156,7 @@ class signal():
 			if self.flipped:
 				plt.ylim(-150,0)
 			else:
-				plt.ylim(-400,0)
+				plt.ylim(-400,-150)
 			plt.title(self.name)
 			plt.xlabel('Time ' + self.units[0])
 			plt.ylabel('Amplitude ' + self.units[1])
