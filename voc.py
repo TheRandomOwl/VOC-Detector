@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.0.2
+Version: 3.1.0
 '''
 
 
@@ -356,7 +356,7 @@ class Run():
 		self.name = os.path.split(foldername)[1]
 
 		try:
-			run_cache = load()
+			run_cache = load(self.name)
 			if cache and self.name == run_cache.name and not (not self.smoothed and run_cache.smoothed) and (run_cache.smoothness == smoothness or run_cache.smoothness == 0):
 				self.signals = run_cache.signals
 				self.units = run_cache.units
@@ -390,9 +390,8 @@ class Run():
 		# Try to save signals to cache
 		try:
 			if cache:
-				with open("saved_run_objects.p", 'wb') as f:
-					pickle.dump(self, f)
-					print("Saved run to cache")
+				save(self)
+				print("Saved run to cache")
 		except:
 			pass
 
@@ -821,11 +820,11 @@ def runs_to_points(runs):
 #be continued on the same set of runs.
 #When I was writing this code, I frequently had to restart it to make minor
 #bugfixes in the code between generating figures, and reducing loading times was necessary.
-def save(runs):
-	with open('saved_run_objects.p','wb') as f:
-		pickle.dump(runs,f)
+def save(run):
+	with open(run.name + '.pickle','wb') as f:
+		pickle.dump(run,f)
 	return
 
-def load():
-	with open('saved_run_objects.p','rb') as f:
+def load(name):
+	with open(name + '.pickle','rb') as f:
 		return pickle.load(f)
