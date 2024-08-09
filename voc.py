@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.2.0
+Version: 4.0.0-alpha
 '''
 
 
@@ -298,6 +298,7 @@ class Signal():
 		n = len(x)
 		
 		fft_values = np.fft.fft(y)
+		self.yf_full = fft_values
 		fft_frequncies = np.fft.fftfreq(n, d=T)
 		magnitude = np.abs(fft_values) / n
 		self.yf = np.asarray(magnitude[:n//2])
