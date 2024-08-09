@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.2.0
+Version: 3.2.1
 '''
 
 
@@ -357,7 +357,7 @@ class Run():
 
 		try:
 			run_cache = load(self.name)
-			if cache and self.name == run_cache.name and not (not self.smoothed and run_cache.smoothed) and (run_cache.smoothness == smoothness or run_cache.smoothness == 0):
+			if cache and self.name == run_cache.name and (run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed):
 				self.signals = run_cache.signals
 				self.units = run_cache.units
 				if self.smoothed and not run_cache.smoothed:
