@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.1.0
+Version: 3.2.0
 '''
 
 
@@ -403,6 +403,18 @@ class Run():
 		except ValueError:
 			return None
 
+	def get(self, index):
+		"""
+		Returns the signal at the specified index.
+
+		Parameters:
+			index (int): The index of the signal to retrieve.
+
+		Returns:
+			object: The signal at the specified index.
+		"""
+		return self.signals[index]
+	
 	#A function defining how a run object is represented when printed
 	#to the command line, etc. Increases readability.
 	def __repr__(self):
