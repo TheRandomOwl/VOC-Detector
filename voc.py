@@ -5,7 +5,7 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.2.1
+Version: 3.2.2
 '''
 
 
@@ -562,7 +562,7 @@ class Run():
 		s.smooth(smoothness)
 		return s
 
-	def avg_signal(self, fft):
+	def avg_signal(self, fft = False):
 		"""
 		Calculate the average signal or FFT for the run.
 		Parameters:
