@@ -299,7 +299,7 @@ class Signal():
 		
 		fft_values = np.fft.fft(y)
 		self.yf_full = fft_values
-		fft_frequncies = np.fft.fftfreq(n, d=T)
+		fft_frequncies = np.fft.fftfreq(n, T)
 		magnitude = np.abs(fft_values) / n
 		self.yf = np.asarray(magnitude[:n//2])
 		self.xf = np.asarray(fft_frequncies[:n//2])
