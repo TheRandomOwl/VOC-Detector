@@ -563,7 +563,7 @@ class Run():
 		s.smooth(smoothness)
 		return s
 
-	def avg_signal(self, fft):
+	def avg_signal(self, fft = False):
 		"""
 		Calculate the average signal or FFT for the run.
 		Parameters:
