@@ -157,7 +157,7 @@ class Signal():
 			fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
 		"""
 		if fft:
-			plt.plot(self.xf,self.yf)
+			plt.plot(self.xf, np.abs(self.yf))
 			plt.title('FFT: ' + self.name)
 			plt.xlabel('Frequency (Hz)')
 			plt.ylabel('Magnitude ' + self.units[1])
@@ -294,15 +294,11 @@ class Signal():
 			x = np.asarray(self.x) * metric_prefix
 
 		# Sample spacing
-		T = np.mean(np.diff(x))
+		dt = np.mean(np.diff(x))
 		n = len(x)
 		
-		fft_values = np.fft.fft(y)
-		self.yf_full = fft_values
-		fft_frequncies = np.fft.fftfreq(n, T)
-		magnitude = np.abs(fft_values) / n
-		self.yf = np.asarray(magnitude[:n//2])
-		self.xf = np.asarray(fft_frequncies[:n//2])
+		self.yf = np.fft.rfft(y)
+		self.xf = np.fft.rfftfreq(n, dt)
 
 	# Plot the magnitude of the FFT results
 	def show_signal(self, fft=False):
@@ -314,7 +310,7 @@ class Signal():
 			None
 		"""
 		# Plot the frequency vs. magnitude
-		plt.plot(self.xf if fft else self.x, self.yf if fft else self.y)
+		plt.plot(self.xf if fft else self.x, np.abs(self.yf) if fft else self.y)
 		
 		# Label the axes
 		plt.xlabel('Frequency (Hz)' if fft else 'Time ' + self.units[0])
@@ -595,7 +591,7 @@ class Run():
 			None
 		"""
 		x, avg_y = self.avg_signal(fft)
-		plt.plot(x, avg_y)
+		plt.plot(x, np.abs(avg_y) if fft else avg_y)
 		plt.title('Average FFT: ' + self.name if fft else 'Average Signal: ' + self.name)
 		plt.xlabel('Frequency (Hz)' if fft else 'Time ' + self.units[0])
 		plt.ylabel('Magnitude' if fft else 'Amplitude ' + self.units[1])
@@ -625,8 +621,8 @@ def plot_average_signals(A, B, filepath, fft=False, show=False):
 
 	#Plot both average signals over time
 	if fft:
-		plt.plot(A_x,A_y,label=A.name)
-		plt.plot(B_x,B_y,label=B.name)
+		plt.plot(A_x, np.abs(A_y),label=A.name)
+		plt.plot(B_x, np.abs(B_y),label=B.name)
 	else:
 		plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
 		plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
