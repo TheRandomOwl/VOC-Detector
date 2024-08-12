@@ -5,7 +5,6 @@ For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
-Version: 3.2.2
 '''
 
 
@@ -20,6 +19,8 @@ import os #A library for loading and writing to the filesystem more easily
 import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
+
+VER = '3.2.3'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -348,6 +349,8 @@ class Run():
 			None
 			
 		"""
+
+		self.version = VER
 		
 		# True if signals are smoothed
 		self.smoothed = smoothness == 'default' or smoothness > 0
@@ -357,7 +360,7 @@ class Run():
 
 		try:
 			run_cache = load(self.name)
-			if cache and self.name == run_cache.name and (run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed):
+			if cache and self.version == run_cache.version and self.name == run_cache.name and (run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed):
 				self.signals = run_cache.signals
 				self.units = run_cache.units
 				if self.smoothed and not run_cache.smoothed:
