@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '3.2.4'
+VER = '3.2.5'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -375,8 +375,8 @@ class Run():
 			pass
 
 		
-		# Get the list of files to be processed and filter out hidden files
-		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.']
+		# Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
+		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.' and filename[-4:] == '.txt']
 
 		# Create a pool of worker processes
 		with multiprocessing.Pool() as pool:
