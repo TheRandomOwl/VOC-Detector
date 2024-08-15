@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '3.2.5'
+VER = '3.2.6'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -360,7 +360,7 @@ class Run():
 
 		try:
 			run_cache = load(self.name)
-			if cache and self.version == run_cache.version and self.name == run_cache.name and ((run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed)):
+			if cache and self.version == run_cache.version and self.name == run_cache.name:
 				self.signals = run_cache.signals
 				self.units = run_cache.units
 				if self.smoothed and not run_cache.smoothed:
