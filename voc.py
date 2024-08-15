@@ -357,7 +357,7 @@ class Run():
 
 		try:
 			run_cache = load(self.name)
-			if cache and self.version == run_cache.version and self.name == run_cache.name and (run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed):
+			if cache and self.version == run_cache.version and self.name == run_cache.name and ((run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed)):
 				self.signals = run_cache.signals
 				self.units = run_cache.units
 				if self.smoothed and not run_cache.smoothed:
@@ -366,12 +366,14 @@ class Run():
 					print("Saved run to cache")
 				print("Loaded run from cache")
 				return
+			elif self.version != run_cache.version:
+				print("Cache version mismatch")
 		except:
 			pass
 
 		
-		# Get the list of files to be processed and filter out hidden files
-		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.']
+		# Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
+		files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.' and filename[-4:] == '.txt']
 
 		# Create a pool of worker processes
 		with multiprocessing.Pool() as pool:
