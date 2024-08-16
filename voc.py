@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '3.2.6'
+VER = '3.2.7'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -357,10 +357,12 @@ class Run():
 		self.smoothness = smoothness
 		
 		self.name = os.path.split(foldername)[1]
+		self.path = foldername
 
 		try:
-			run_cache = load(self.name)
-			if cache and self.version == run_cache.version and self.name == run_cache.name:
+			print(f"Trying to load cache from {self.path + '.pickle'}")
+			run_cache = load(self.path + '.pickle')
+			if cache and self.version == run_cache.version and self.name == run_cache.name and self.smoothness == run_cache.smoothness:
 				self.signals = run_cache.signals
 				self.units = run_cache.units
 				if self.smoothed and not run_cache.smoothed:
@@ -371,8 +373,10 @@ class Run():
 				return
 			elif self.version != run_cache.version:
 				print("Cache version mismatch")
+		except FileNotFoundError:
+			print("Cache not found")
 		except:
-			pass
+			print("Unable to load cache")
 
 		
 		# Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
@@ -396,9 +400,9 @@ class Run():
 		try:
 			if cache:
 				save(self)
-				print("Saved run to cache")
+				print(f"Saved cache to {self.path + '.pickle'}")
 		except:
-			pass
+			print("Unable to save cache")
 
 	@staticmethod
 	def load_signal(args):
@@ -838,10 +842,10 @@ def runs_to_points(runs):
 #When I was writing this code, I frequently had to restart it to make minor
 #bugfixes in the code between generating figures, and reducing loading times was necessary.
 def save(run):
-	with open(run.name + '.pickle','wb') as f:
+	with open(run.path + '.pickle','wb') as f:
 		pickle.dump(run,f)
 	return
 
-def load(name):
-	with open(name + '.pickle','rb') as f:
+def load(file):
+	with open(file,'rb') as f:
 		return pickle.load(f)
