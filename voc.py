@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '3.2.7'
+VER = '3.2.8'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -360,8 +360,9 @@ class Run():
 		self.path = foldername
 
 		try:
-			print(f"Trying to load cache from {self.path + '.pickle'}")
-			run_cache = load(self.path + '.pickle')
+			if cache:
+				print(f"Trying to load cache from {self.path + '.pickle'}")
+				run_cache = load(self.path + '.pickle')
 			if cache and self.version == run_cache.version and self.name == run_cache.name and self.smoothness == run_cache.smoothness:
 				self.signals = run_cache.signals
 				self.units = run_cache.units
@@ -375,6 +376,9 @@ class Run():
 				print("Cache version mismatch")
 		except FileNotFoundError:
 			print("Cache not found")
+		except UnboundLocalError:
+			# Ignore if run_cache is not defined due to cache being False
+			pass
 		except:
 			print("Unable to load cache")
 
