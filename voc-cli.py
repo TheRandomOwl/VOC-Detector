@@ -8,7 +8,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.2.0'
+VER = '0.2.1'
 API = voc.VER
 
 # Helper Functions
@@ -54,13 +54,13 @@ def plot(ctx, folder, save_dir):
 @click.argument('folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.pass_context
 def average(ctx, folder):
-    """Show the average signal or FFT for a run."""
+    """Plot the average signal or FFT for a run."""
     
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
         signals.clean_empty(threshold=ctx.obj['min'])
     
-    signals.show_avg_signal(fft=ctx.obj['fft'])
+    signals.plot_average_signal(fft=ctx.obj['fft'])
     click.echo(f"Displayed average signal for run in folder: {folder}")
 
 @cli.command()

@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '4.0.0-beta.2'
+VER = '4.0.0-beta.3'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -593,7 +593,7 @@ class Run():
 		
 		return x, avg_y
 
-	def show_avg_signal(self, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
+	def plot_average_signal(self, folder = None, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
 		"""
 		Plot and show the average signal or FFT for the run.
 		Parameters:

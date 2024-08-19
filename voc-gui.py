@@ -4,7 +4,7 @@ from pathlib import Path
 import voc
 
 # Version Information
-VER = '0.1.0'
+VER = '0.1.1'
 API = voc.VER
 
 # Helper Functions
@@ -102,7 +102,7 @@ class VocGuiApp(tk.Tk):
             return
 
         signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        signals.show_avg_signal(fft=self.fft_var.get())
+        signals.plot_average_signal(fft=self.fft_var.get())
         messagebox.showinfo("Success", f"Displayed average signal for run in folder: {folder}")
 
     def compare_runs(self):
