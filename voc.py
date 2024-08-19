@@ -7,15 +7,14 @@ Version: 10:50 am 6/23/2023
 Modified by: Nathan Perry and Nathan Fisher
 '''
 
-
 #These statements import the libraries needed for the code to run
-import numpy as np #A library with useful data storage strucutures and mathematical operations
-import matplotlib.pyplot as plt #A library for generating plots
-import csv #A library for reading and writing csv files
-import os #A library for loading and writing to the filesystem more easily
-import pickle #A library for saving data in a python-readable format
-import multiprocessing # A library for parallel processing
-from tqdm import tqdm # A library for progress bars
+import csv  # A library for reading and writing csv files
+import matplotlib.pyplot as plt  # A library for generating plots
+import multiprocessing  # A library for parallel processing
+import numpy as np  # A library with useful data storage structures and mathematical operations
+import os  # A library for loading and writing to the filesystem more easily
+import pickle  # A library for saving data in a python-readable format
+from tqdm import tqdm  # A library for progress bars
 
 VER = '4.0.0-beta.5'
 
@@ -512,16 +511,9 @@ def plot_average_signals(A, B, filepath = None, fft=False):
     
     plt.clf()
 
-#A function that saves a list (technically a python dictionary datatype) of run objects
-#as the file 'saved_run_objects.p'
-#This is useful because it allows for a large number of runs to be loaded
-#into the code in a session of use and then saved, with their statistics,
-#in a python-readable format.
-#Since loading the raw data and calculating statistics takes time, this
-#greatly reduces loading times if the code must be restarted but work will
-#be continued on the same set of runs.
-#When I was writing this code, I frequently had to restart it to make minor
-#bugfixes in the code between generating figures, and reducing loading times was necessary.
+"""
+The following functions are used to save and load run objects to and from the filesystem.
+"""
 def save(run):
     with open(run.path + '.pickle','wb') as f:
         pickle.dump(run,f)
@@ -530,3 +522,6 @@ def save(run):
 def load(file):
     with open(file,'rb') as f:
         return pickle.load(f)
+    
+if __name__ == '__main__':
+    print(VER)
