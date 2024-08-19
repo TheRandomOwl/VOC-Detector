@@ -8,7 +8,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.3.0'
+VER = '0.4.0'
 API = voc.VER
 
 # Helper Functions
@@ -40,15 +40,15 @@ def cli(ctx, cache, smoothness, fft, y_offset, min):
 def plot(ctx, folder, save_dir):
     """Plot signals and save to the specified folder."""
     # cache, smoothness, fft, y_offset = get_common_options(ctx)
-    save_dir_path = Path(save_dir)
-    validate_dir(save_dir_path)
+    save_path = Path(save_dir)
+    validate_dir(save_path)
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
         signals.clean_empty(threshold=ctx.obj['min'])
 
-    signals.plot(save_dir_path, fft=ctx.obj['fft'])
-    click.echo(f"Plotted signals to folder: {save_dir_path}")
+    signals.plot(save_path, fft=ctx.obj['fft'])
+    click.echo(f"Plotted signals to folder: {save_path}")
 
 @cli.command()
 @click.argument('folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
@@ -65,8 +65,9 @@ def average(ctx, folder, save_dir):
     if ctx.obj['min'] != None:
         signals.clean_empty(threshold=ctx.obj['min'])
     
-    signals.plot_average_signal(fft=ctx.obj['fft'])
-    click.echo(f"Displayed average signal for run in folder: {folder}")
+    signals.plot_average_signal(save_dir, fft=ctx.obj['fft'])
+    if save_dir != None:
+        click.echo(f"Saved average plot to folder: {save_dir}")
 
 @cli.command()
 @click.argument('folder_a', type=click.Path(exists=True, file_okay=False, dir_okay=True))
@@ -88,6 +89,8 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
     
     if method == 'avg-plot':
         voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
+        if save_dir != None:
+            click.echo(f"Saved comparison plot to folder: {save_dir}")
 
 if __name__ == '__main__':
     cli()
