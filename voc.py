@@ -352,6 +352,27 @@ class Run():
         s, folder, plot_fft = args
         s.plot(folder, fft=plot_fft)
 
+    def smooth(self, smoothness = None):
+        """
+        Smooth each signal in the run with a 10-point moving average.
+        Parameters:
+            smoothness (int, optional): The size of the window for smoothing the signals. Default is None.
+        Returns:
+            None
+        """
+        if smoothness == 'default':
+            smoothness = None
+        with multiprocessing.Pool() as pool:
+            # Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
+            self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]), 
+                            total=len(self.signals), desc="Smoothing signals"))
+    
+    @staticmethod
+    def smooth_signals(args):
+        s, smoothness = args
+        s.smooth(smoothness)
+        return s
+    
     def fft(self, metric_prefix = None):
         """
         Calculate the FFT for every signal in the run.
