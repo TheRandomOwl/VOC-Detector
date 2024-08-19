@@ -396,7 +396,8 @@ class Run():
 		self.units = self.signals[0].units
 		
 		# Smooth the signals
-		self.smooth(smoothness)
+		if self.smoothed:
+			self.smooth(smoothness)
 
 		# Try to save signals to cache
 		try:
