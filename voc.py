@@ -371,7 +371,7 @@ class Run():
                 print("Loaded run from cache")
                 return
             elif self.version != run_cache.version:
-                print("Cache version mismatch")
+                print(f"Cache version mismatch. Expected {self.version}, got {run_cache.version}")
         except FileNotFoundError:
             print("Cache not found")
         except UnboundLocalError:
