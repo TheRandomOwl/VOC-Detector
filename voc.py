@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '4.0.0-beta.3'
+VER = '4.0.0-beta.4'
 
 METRIC = {
     '(us)': 1e-6,
@@ -593,10 +593,11 @@ class Run():
         
         return x, avg_y
 
-    def plot_average_signal(self, folder = None, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
+    def plot_average_signal(self, filepath = None, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
         """
         Plot and show the average signal or FFT for the run.
         Parameters:
+            filepath (str, optional): Directory to save the plot image. Default is None.
             fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
             ybottom (optional): Bottom limit for y-axis.
             ytop (optional): Top limit for y-axis.
@@ -612,9 +613,15 @@ class Run():
         plt.ylabel('Magnitude' if fft else 'Amplitude ' + self.units[1])
         plt.ylim(bottom=ybottom, top=ytop)
         plt.xlim(left=xleft, right=xright)
-        plt.show()
         
-def plot_average_signals(A, B, filepath, fft=False, show=False):
+        if filepath == None:
+            plt.show()
+        else:
+            plt.savefig(os.path.join(filepath, self.name + '_avg_signals.png'))
+        
+        plt.clf()
+        
+def plot_average_signals(A, B, filepath = None, fft=False):
     """
     Plot the average signal or FFT for two runs. Useful for subjectively identifying 
     typical signal differences between two treatments.
@@ -652,10 +659,11 @@ def plot_average_signals(A, B, filepath, fft=False, show=False):
 
     #Save the plot at the specified location with an auto-generated name
     #and clear the plotting tool
-    if show:
+    if filepath == None:
         plt.show()
     else:
-        plt.savefig(os.path.join(filepath,A.name+'_'+B.name+'_average_signals.png'))
+        plt.savefig(os.path.join(filepath, A.name + '-' + B.name + '_avg_signals.png'))
+    
     plt.clf()
 
 #A function that plots each signal in two runs as an (x,y) datapoints
