@@ -8,7 +8,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.2.1'
+VER = '0.3.0'
 API = voc.VER
 
 # Helper Functions
@@ -52,9 +52,14 @@ def plot(ctx, folder, save_dir):
 
 @cli.command()
 @click.argument('folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), required=False, help="Directory to save the average plot. Optional.")
 @click.pass_context
-def average(ctx, folder):
+def average(ctx, folder, save_dir):
     """Plot the average signal or FFT for a run."""
+
+    if save_dir != None:
+        save_dir = Path(save_dir)
+        validate_dir(save_dir)
     
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
@@ -66,15 +71,14 @@ def average(ctx, folder):
 @cli.command()
 @click.argument('folder_a', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('folder_b', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), help="Directory to save the comparison plot. Optional.")
+@click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), required=False, help="Directory to save the comparison plot. Optional.")
+@click.option('--method', type=click.Choice(['avg-plot', 'placeholder']), default='avg-plot', help="Method to compare signals. Default is avg-plot.")
 @click.pass_context
-def compare(ctx, folder_a, folder_b, save_dir):
-    """Compare average signals of two runs."""
-    save_path = Path(save_dir) if save_dir else None
-    show_plot = True if save_dir == None else False
-
-    if save_path != None:
-        validate_dir(save_path)
+def compare(ctx, folder_a, folder_b, save_dir, method):
+    """Compare the signals of two runs."""
+    if save_dir != None:
+        save_dir = Path(save_dir)
+        validate_dir(save_dir)
 
     A = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     B = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
@@ -82,10 +86,8 @@ def compare(ctx, folder_a, folder_b, save_dir):
         A.clean_empty(threshold=ctx.obj['min'])
         B.clean_empty(threshold=ctx.obj['min'])
     
-    voc.plot_average_signals(A, B, save_path, fft=ctx.obj['fft'], show=show_plot)
-    
-    if not show_plot:
-        click.echo(f"Compared average signals and saved plot to {save_path}")
+    if method == 'avg-plot':
+        voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
 
 if __name__ == '__main__':
     cli()
