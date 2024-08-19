@@ -12,7 +12,6 @@ Modified by: Nathan Perry and Nathan Fisher
 import numpy as np #A library with useful data storage strucutures and mathematical operations
 import matplotlib.pyplot as plt #A library for generating plots
 from scipy.signal import find_peaks #A function for finding peaks
-import scipy.fft #A library for computing ffts
 import scipy.stats #A library with statistical tools
 import csv #A library for reading and writing csv files
 import os #A library for loading and writing to the filesystem more easily
