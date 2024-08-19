@@ -220,7 +220,7 @@ class Signal():
 		if threshold == None:
 			threshold = -390
 		
-		return self.y.max() < threshold
+		return self.y.max() <= threshold
 
 	def smooth(self, window_size = None):
 		"""
