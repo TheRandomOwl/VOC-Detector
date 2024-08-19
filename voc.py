@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '4.0.0-alpha'
+VER = '4.0.0-beta.2'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -334,7 +334,7 @@ class Run():
 		units (list): List of units of the signals in the run.
 	"""
 
-	def __init__(self, foldername, flip = False, cache = True, smoothness = 'default'):
+	def __init__(self, foldername, flip = False, y_offset = 0, cache = True, smoothness = 'default'):
 		"""
 		Initialize a run instance from a specified folder of .txt files.
 		Parameters:
@@ -354,10 +354,14 @@ class Run():
 		self.smoothness = smoothness
 		
 		self.name = os.path.split(foldername)[1]
+		self.path = foldername
+		self.y_offset = y_offset
 
 		try:
-			run_cache = load(self.name)
-			if cache and self.version == run_cache.version and self.name == run_cache.name and ((run_cache.smoothed and self.smoothed and run_cache.smoothness == smoothness) or (smoothness == 'default' or smoothness > 0 and not run_cache.smoothed)):
+			if cache:
+				print(f"Trying to load cache from {self.path + '.pickle'}")
+				run_cache = load(self.path + '.pickle')
+			if cache and self.version == run_cache.version and self.name == run_cache.name and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
 				self.signals = run_cache.signals
 				self.units = run_cache.units
 				if self.smoothed and not run_cache.smoothed:
@@ -368,8 +372,13 @@ class Run():
 				return
 			elif self.version != run_cache.version:
 				print("Cache version mismatch")
-		except:
+		except FileNotFoundError:
+			print("Cache not found")
+		except UnboundLocalError:
+			# Ignore if run_cache is not defined due to cache being False
 			pass
+		except:
+			print("Unable to load cache")
 
 		
 		# Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
@@ -378,7 +387,7 @@ class Run():
 		# Create a pool of worker processes
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the loading of signals
-			results = list(tqdm(pool.imap(self.load_signal, [(f, flip) for f in files]), total=len(files), desc="Loading files"))
+			results = list(tqdm(pool.imap(self.load_signal, [(f, flip, y_offset) for f in files]), total=len(files), desc="Loading files"))
 
 		# Filter out any None results (in case of errors)
 		self.signals = [res for res in results if res is not None]
@@ -393,15 +402,15 @@ class Run():
 		try:
 			if cache:
 				save(self)
-				print("Saved run to cache")
+				print(f"Saved cache to {self.path + '.pickle'}")
 		except:
-			pass
+			print("Unable to save cache")
 
 	@staticmethod
 	def load_signal(args):
-		f, flip = args
+		f, flip, offset = args
 		try:
-			return Signal(f, flip=flip)
+			return Signal(f, flip=flip, baseline_shift=offset)
 		except ValueError:
 			return None
 
@@ -835,10 +844,10 @@ def runs_to_points(runs):
 #When I was writing this code, I frequently had to restart it to make minor
 #bugfixes in the code between generating figures, and reducing loading times was necessary.
 def save(run):
-	with open(run.name + '.pickle','wb') as f:
+	with open(run.path + '.pickle','wb') as f:
 		pickle.dump(run,f)
 	return
 
-def load(name):
-	with open(name + '.pickle','rb') as f:
+def load(file):
+	with open(file,'rb') as f:
 		return pickle.load(f)
