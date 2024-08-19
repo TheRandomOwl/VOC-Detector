@@ -20,7 +20,7 @@ import pickle #A library for saving data in a python-readable format
 import multiprocessing # A library for parallel processing
 from tqdm import tqdm # A library for progress bars
 
-VER = '3.2.8'
+VER = '4.0.0-beta.1'
 
 METRIC = {
 	'(us)': 1e-6,
@@ -337,7 +337,7 @@ class Run():
 		units (list): List of units of the signals in the run.
 	"""
 
-	def __init__(self, foldername, flip = False, cache = True, smoothness = 'default'):
+	def __init__(self, foldername, flip = False, y_offset = 0, cache = True, smoothness = 'default'):
 		"""
 		Initialize a run instance from a specified folder of .txt files.
 		Parameters:
@@ -389,7 +389,7 @@ class Run():
 		# Create a pool of worker processes
 		with multiprocessing.Pool() as pool:
 			# Use pool.map to parallelize the loading of signals
-			results = list(tqdm(pool.imap(self.load_signal, [(f, flip) for f in files]), total=len(files), desc="Loading files"))
+			results = list(tqdm(pool.imap(self.load_signal, [(f, flip, y_offset) for f in files]), total=len(files), desc="Loading files"))
 
 		# Filter out any None results (in case of errors)
 		self.signals = [res for res in results if res is not None]
@@ -410,9 +410,9 @@ class Run():
 
 	@staticmethod
 	def load_signal(args):
-		f, flip = args
+		f, flip, offset = args
 		try:
-			return Signal(f, flip=flip)
+			return Signal(f, flip=flip, baseline_shift=offset)
 		except ValueError:
 			return None
 
