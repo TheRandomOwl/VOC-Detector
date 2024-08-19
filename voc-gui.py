@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from pathlib import Path
+import multiprocessing
 import voc
 
 # Version Information
-VER = '0.1.1'
+VER = '0.1.2'
 API = voc.VER
 
 # Helper Functions
@@ -136,5 +137,6 @@ class VocGuiApp(tk.Tk):
         messagebox.showinfo("Version Info", version_info)
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     app = VocGuiApp()
     app.mainloop()

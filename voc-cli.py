@@ -1,5 +1,6 @@
 import click
 import voc
+import multiprocessing
 from pathlib import Path
 
 """
@@ -93,4 +94,5 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
             click.echo(f"Saved comparison plot to folder: {save_dir}")
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     cli()
