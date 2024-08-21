@@ -5,7 +5,7 @@ import multiprocessing
 import voc
 
 # Version Information
-VER = '0.1.3'
+VER = '0.1.4'
 API = voc.VER
 
 # Helper Functions
@@ -117,7 +117,6 @@ class VocGuiApp(tk.Tk):
             return
 
         save_path = Path(save_dir) if save_dir else None
-        show_plot = True if not save_dir else False
 
         if save_path:
             validate_dir(save_path)
