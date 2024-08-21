@@ -134,16 +134,14 @@ class Signal():
         plt.clf()
     
     # Checks if there exists no peak and returns true if there isn't a peak else return false
-    def is_empty(self, threshold=None):
+    def is_empty(self, threshold):
         """
         Check if there exists no peak in the signal.
         Parameters:
-            threshold (int, optional): Threshold to determine peak existence. Default is -390.
+            threshold (int): Threshold to determine peak existence.
         Returns:
             bool: True if there is no peak above the threshold, False otherwise.
         """
-        if threshold == None:
-            threshold = -390
         
         return self.y.max() <= threshold
 
@@ -370,9 +368,11 @@ class Run():
         for s in self.signals:
             s.fft(metric_prefix)
 
-    def clean_empty(self, threshold=None):
+    def clean_empty(self, threshold):
         """
         Remove signals without peaks from the run.
+        Parameters:
+            threshold (int): The minimum peak height for a signal to be included.
         Returns:
             None
         """
