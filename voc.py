@@ -13,11 +13,12 @@ import matplotlib.pyplot as plt  # A library for generating plots
 import multiprocessing  # A library for parallel processing
 import numpy as np  # A library with useful data storage structures and mathematical operations
 import os  # A library for loading and writing to the filesystem more easily
+from pathlib import Path # A library for handling file paths
 import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.0-beta.8'
+VER = '4.0.0-beta.9'
 
 METRIC = {
     '(us)': 1e-6,
@@ -239,7 +240,7 @@ class Run():
         self.smoothness = smoothness
         
         self.name = os.path.split(foldername)[1]
-        self.path = foldername
+        self.path = str(Path(foldername))
         self.y_offset = y_offset
 
         try:
