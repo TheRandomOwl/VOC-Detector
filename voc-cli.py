@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.4.0'
+VER = '0.5.0'
 API = voc.VER
 
 # Helper Functions
@@ -74,7 +74,7 @@ def average(ctx, folder, save_dir):
 @click.argument('folder_a', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('folder_b', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), required=False, help="Directory to save the comparison plot. Optional.")
-@click.option('--method', type=click.Choice(['avg-plot', 'placeholder']), default='avg-plot', help="Method to compare signals. Default is avg-plot.")
+@click.option('--method', type=click.Choice(['avg-plot', 'max']), default='avg-plot', help="Method to compare signals. Default is avg-plot.")
 @click.pass_context
 def compare(ctx, folder_a, folder_b, save_dir, method):
     """Compare the signals of two runs."""
@@ -92,6 +92,8 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
         if save_dir != None:
             click.echo(f"Saved comparison plot to folder: {save_dir}")
+    elif method == 'max':
+        click.echo("Max comparison not implemented yet.")
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
