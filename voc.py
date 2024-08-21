@@ -138,7 +138,7 @@ class Signal():
         """
         Check if there exists no peak in the signal.
         Parameters:
-            threshold (int): Threshold to determine peak existence.
+            threshold (float): Threshold to determine peak existence.
         Returns:
             bool: True if there is no peak above the threshold, False otherwise.
         """
@@ -372,7 +372,7 @@ class Run():
         """
         Remove signals without peaks from the run.
         Parameters:
-            threshold (int): The minimum peak height for a signal to be included.
+            threshold (float): The minimum peak height for a signal to be included.
         Returns:
             None
         """
