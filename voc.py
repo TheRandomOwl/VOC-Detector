@@ -98,6 +98,8 @@ class Signal():
         # Smooth the signal if specified
         self.smooth(smooth_window)
 
+        self.y_offset = baseline_shift
+
     def plot(self,folder,fft = False):
         """
         Generate and save a plot of the signal or its FFT.
@@ -111,7 +113,7 @@ class Signal():
             plt.xlabel('Frequency (Hz)')
             plt.ylabel('Magnitude ' + self.units[1])
         else:
-            plt.ylim(-400,-150)
+            plt.ylim(-400 + self.y_offset,-150 + self.y_offset)
             plt.title(self.name)
             plt.xlabel('Time ' + self.units[0])
             plt.ylabel('Amplitude ' + self.units[1])
