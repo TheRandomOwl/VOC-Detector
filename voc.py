@@ -390,38 +390,7 @@ class Run():
             if not signal.is_empty(threshold):
                 new.append(signal)
         self.signals = new
-                
-
-    #Calculates time values t for each signal in the run for which the integral
-    #from 0 to t represents 90%, 50%, or 10% of the total area under the curve
-    def remake_stats(self):
-
-        #Create a list for the run object to store this data for each signal
-        self.nineties = []
-        self.fifties = []
-        self.tens = []
-        i = 0
-
-        #Calculate each statistic for each signal and append the results to
-        #the appropriate lists
-        for s in self.signals:
-            self.nineties.append(s.area_under_prop(0.9))
-            self.fifties.append(s.area_under_prop(0.5))
-            self.tens.append(s.area_under_prop(0.1))
-            i += 1
-
-            #Print a progress message
-            print(f'Calculating statistics for {self.name}, {i} of {len(self.signals)} complete.',end = '\r')
         
-    #Remove double-peaked signals from the run using the 'nnet_multimodal'
-    #method above, this is the currently used cleaning method
-    def nnet_clean(self):
-        new = []
-        for signal in self.signals:
-            if not signal.nnet_multimodal():
-                new.append(signal)
-        self.signals = new
-
     def avg_signal(self, fft = False):
         """
         Calculate the average signal or FFT for the run.
