@@ -14,9 +14,10 @@ import multiprocessing  # A library for parallel processing
 import numpy as np  # A library with useful data storage structures and mathematical operations
 import os  # A library for loading and writing to the filesystem more easily
 import pickle  # A library for saving data in a python-readable format
+from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.0-beta.6'
+VER = '4.0.0-beta.7'
 
 METRIC = {
     '(us)': 1e-6,
@@ -411,6 +412,33 @@ class Run():
         x = self.signals[0].xf if fft else self.signals[0].x
         
         return x, avg_y
+    
+    def avg_area(self):
+        """
+        Calculate the average area under the curve for the run.
+        Returns:
+            float: The average area under the curve.
+        """
+        areas = [trapezoid(s.y, s.x) for s in self.signals]
+        return np.mean(areas)
+    
+    def avg_max(self):
+        """
+        Calculate the average maximum value for the run.
+        Returns:
+            float: The average maximum value.
+        """
+        maxes = [s.y.max() for s in self.signals]
+        return np.mean(maxes)
+    
+    def avg_voltage(self):
+        """
+        Calculate the average voltage for the run.
+        Returns:
+            float: The average voltage.
+        """
+        voltages = [np.mean(s.y) for s in self.signals]
+        return np.mean(voltages)
 
     def plot_average_signal(self, filepath = None, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
         """
@@ -485,6 +513,18 @@ def plot_average_signals(A, B, filepath = None, fft=False):
     
     plt.clf()
 
+def lin_similarity(A, B):
+    """
+    Calculate the similarity between two runs.
+    Parameters:
+        A (run): The first run.
+        B (run): The second run.
+    Returns:
+        float: The similarity between the two runs.
+    """
+    _, A_y = A.avg_signal()
+    _, B_y = B.avg_signal()
+    return np.corrcoef(A_y, B_y)[0, 1]
 """
 The following functions are used to save and load run objects to and from the filesystem.
 """
