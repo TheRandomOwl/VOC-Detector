@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.6.1'
+VER = '0.6.2'
 API = voc.VER
 
 # Helper Functions
@@ -38,7 +38,7 @@ def cli(ctx, cache, smoothness, fft, y_offset, threshold):
 # Plot Command
 @cli.command()
 @click.argument('folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), required=True, help="Directory to save the plots.")
+@click.argument('save-dir', type=click.Path(file_okay=False, dir_okay=True))
 @click.pass_context
 def plot(ctx, folder, save_dir):
     """Plot all signals in a folder and save to a specified folder."""
