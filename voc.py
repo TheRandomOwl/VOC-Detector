@@ -245,7 +245,7 @@ class Run():
             if cache:
                 print(f"Trying to load cache from {self.path + '.pickle'}")
                 run_cache = load(self.path + '.pickle')
-            if cache and self.version == run_cache.version and self.name == run_cache.name and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
+            if cache and self.version == run_cache.version and self.path == run_cache.path and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
                 self.signals = run_cache.signals
                 self.units = run_cache.units
                 if self.smoothed and not run_cache.smoothed:
