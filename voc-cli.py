@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.6.0'
+VER = '0.6.1'
 API = voc.VER
 
 # Helper Functions
@@ -48,7 +48,7 @@ def plot(ctx, folder, save_dir):
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
-        signals.clean_empty(threshold=ctx.obj['min'])
+        signals.clean_empty(ctx.obj['min'])
 
     signals.plot(save_path, fft=ctx.obj['fft'])
     click.echo(f"Plotted signals to folder: {save_path}")
@@ -68,7 +68,7 @@ def average(ctx, folder, save_dir, method):
     
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
-        signals.clean_empty(threshold=ctx.obj['min'])
+        signals.clean_empty(ctx.obj['min'])
     
     if method == 'plot':
         signals.plot_average_signal(save_dir, fft=ctx.obj['fft'])
@@ -96,8 +96,8 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
     A = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     B = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
-        A.clean_empty(threshold=ctx.obj['min'])
-        B.clean_empty(threshold=ctx.obj['min'])
+        A.clean_empty(ctx.obj['min'])
+        B.clean_empty(ctx.obj['min'])
     
     if method == 'avg-plot':
         voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
