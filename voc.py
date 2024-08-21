@@ -437,8 +437,8 @@ class Run():
         Returns:
             float: The average voltage.
         """
-        voltages = [np.mean(s.y) for s in self.signals]
-        return np.mean(voltages)
+        _, voltage = self.avg_signal()
+        return np.mean(voltage)
 
     def plot_average_signal(self, filepath = None, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
         """
