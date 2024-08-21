@@ -5,7 +5,7 @@ import multiprocessing
 import voc
 
 # Version Information
-VER = '0.1.4'
+VER = '0.2.0'
 API = voc.VER
 
 # Helper Functions
@@ -25,6 +25,7 @@ class VocGuiApp(tk.Tk):
         self.smoothness_var = tk.IntVar(value=10)
         self.fft_var = tk.BooleanVar(value=False)
         self.y_offset_var = tk.DoubleVar(value=0.0)
+        self.threshold_var = tk.DoubleVar(value=float('-inf'))
 
         self.create_widgets()
 
@@ -42,6 +43,9 @@ class VocGuiApp(tk.Tk):
         tk.Checkbutton(options_frame, text="FFT", variable=self.fft_var).grid(row=1, column=0, sticky=tk.W)
         tk.Label(options_frame, text="Y-Offset:").grid(row=1, column=1, sticky=tk.E)
         tk.Entry(options_frame, textvariable=self.y_offset_var).grid(row=1, column=2, sticky=tk.W)
+
+        tk.Label(options_frame, text="Threshold:").grid(row=2, column=1, sticky=tk.E)
+        tk.Entry(options_frame, textvariable=self.threshold_var).grid(row=2, column=2, sticky=tk.W)
 
         # Folder Selection Frame
         folder_frame = tk.Frame(self)
@@ -93,6 +97,7 @@ class VocGuiApp(tk.Tk):
         validate_dir(save_dir_path)
 
         signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
+        signals.clean_empty(self.threshold_var.get())
         signals.plot(save_dir_path, fft=self.fft_var.get())
         messagebox.showinfo("Success", f"Plotted signals to folder: {save_dir_path}")
 
@@ -103,6 +108,7 @@ class VocGuiApp(tk.Tk):
             return
 
         signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
+        signals.clean_empty(self.threshold_var.get())
         signals.plot_average_signal(fft=self.fft_var.get())
         messagebox.showinfo("Success", f"Displayed average signal for run in folder: {folder}")
 
@@ -122,7 +128,9 @@ class VocGuiApp(tk.Tk):
             validate_dir(save_path)
 
         run_a = voc.Run(folder_a, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
+        run_a.clean_empty(self.threshold_var.get())
         run_b = voc.Run(folder_b, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
+        run_b.clean_empty(self.threshold_var.get())
         voc.plot_average_signals(run_a, run_b, save_path, fft=self.fft_var.get())
 
         if save_path:
