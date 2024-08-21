@@ -16,7 +16,7 @@ import os  # A library for loading and writing to the filesystem more easily
 import pickle  # A library for saving data in a python-readable format
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.0-beta.5'
+VER = '4.0.0-beta.6'
 
 METRIC = {
     '(us)': 1e-6,
@@ -58,27 +58,20 @@ class Signal():
         x (ndarray): Array of x values for the signal.
         y (ndarray): Array of y values for the signal.
         name (str): Name of the signal.
-        flipped (bool): True if the signal is flipped, False otherwise.
     """
 
     #The function initiating each class instance from a specified .txt file
-    def __init__(self, infile, name = False, flip = False, baseline_shift = 0, smooth_window=0):
+    def __init__(self, infile, name = False, baseline_shift = 0, smooth_window=0):
         """
         Initializes an instance of the Signal class.
         Parameters:
             infile (str): The path to the input file.
             name (str, optional): The name of the object. If not provided, the name will be extracted from the input file path.
-            flip (bool, optional): Specifies whether to flip the data. Default is False.
             baseline_shift (float, optional): The amount to shift the y values of the signal. Default is 0.
             smooth_window (int, optional): The size of the window for smoothing the signal. Default is 0 (no smoothing).
         Returns:
         None
         """
-
-        #Flip the data only if specified
-        const = 1
-        if flip:
-            const = -1
 
         #Open the specified input file and read all of its lines into a list
         with open(infile) as f:
@@ -94,17 +87,13 @@ class Signal():
             #Create a list of the x values for the signal
             self.x = np.asarray([float(elm[0]) for elm in data])
 
-            #Create a list of y values for the signal, flipping each
-            #if specified and moving them to zero the signal
-            self.y = np.asarray([const*float(elm[1])+baseline_shift for elm in data])
+            #Create a list of y values for the signal, moving them to zero the signal
+            self.y = np.asarray([float(elm[1])+baseline_shift for elm in data])
 
         #Set a name for the object so that it can be identified
         self.name = os.path.split(infile)[1]
         if name:
             self.name = name
-
-        # True if flipped
-        self.flipped = flip
 
         # Smooth the signal if specified
         self.smooth(smooth_window)
@@ -122,10 +111,7 @@ class Signal():
             plt.xlabel('Frequency (Hz)')
             plt.ylabel('Magnitude ' + self.units[1])
         else:
-            if self.flipped:
-                plt.ylim(-150,0)
-            else:
-                plt.ylim(-400,-150)
+            plt.ylim(-400,-150)
             plt.title(self.name)
             plt.xlabel('Time ' + self.units[0])
             plt.ylabel('Amplitude ' + self.units[1])
@@ -153,9 +139,6 @@ class Signal():
         Returns:
             bool: True if there is no peak above the threshold, False otherwise.
         """
-        if self.flipped:
-            raise ValueError("Cannot check for empty signal if signal is flipped")
-        
         if threshold == None:
             threshold = -390
         
@@ -236,12 +219,11 @@ class Run():
         units (list): List of units of the signals in the run.
     """
 
-    def __init__(self, foldername, flip = False, y_offset = 0, cache = True, smoothness = 'default'):
+    def __init__(self, foldername, y_offset = 0, cache = True, smoothness = 'default'):
         """
         Initialize a run instance from a specified folder of .txt files.
         Parameters:
             foldername (str): Path to the folder containing .txt files.
-            flip (bool, optional): If True, flip the signals. Default is False.
             cache (bool, optional): If True, save the run object to cache. Default is True.
             smoothness (int, optional): The size of the window for smoothing the signals. Default is 'default'.
         Returns:
@@ -289,7 +271,7 @@ class Run():
         # Create a pool of worker processes
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the loading of signals
-            results = list(tqdm(pool.imap(self.load_signal, [(f, flip, y_offset) for f in files]), total=len(files), desc="Loading files"))
+            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset) for f in files]), total=len(files), desc="Loading files"))
 
         # Filter out any None results (in case of errors)
         self.signals = [res for res in results if res is not None]
@@ -311,9 +293,9 @@ class Run():
 
     @staticmethod
     def load_signal(args):
-        f, flip, offset = args
+        f, offset = args
         try:
-            return Signal(f, flip=flip, baseline_shift=offset)
+            return Signal(f, baseline_shift=offset)
         except ValueError:
             return None
 
