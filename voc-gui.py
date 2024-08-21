@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from pathlib import Path
+import multiprocessing
 import voc
 
 # Version Information
-VER = '0.1.1'
+VER = '0.1.3'
 API = voc.VER
 
 # Helper Functions
@@ -123,7 +124,7 @@ class VocGuiApp(tk.Tk):
 
         run_a = voc.Run(folder_a, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
         run_b = voc.Run(folder_b, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        voc.plot_average_signals(run_a, run_b, save_path, fft=self.fft_var.get(), show=show_plot)
+        voc.plot_average_signals(run_a, run_b, save_path, fft=self.fft_var.get())
 
         if save_path:
             messagebox.showinfo("Success", f"Compared average signals and saved plot to {save_path}")
@@ -136,5 +137,6 @@ class VocGuiApp(tk.Tk):
         messagebox.showinfo("Version Info", version_info)
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     app = VocGuiApp()
     app.mainloop()
