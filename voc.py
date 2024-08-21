@@ -61,7 +61,7 @@ class Signal():
     """
 
     #The function initiating each class instance from a specified .txt file
-    def __init__(self, infile, name = False, baseline_shift = 0, smooth_window=0):
+    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window=0):
         """
         Initializes an instance of the Signal class.
         Parameters:
@@ -92,7 +92,7 @@ class Signal():
 
         #Set a name for the object so that it can be identified
         self.name = os.path.split(infile)[1]
-        if name:
+        if name != None:
             self.name = name
 
         # Smooth the signal if specified
