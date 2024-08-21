@@ -370,18 +370,6 @@ class Run():
         for s in self.signals:
             s.fft(metric_prefix)
 
-    def clean(self):
-        """
-        Remove double-peaked signals from the run.
-        Returns:
-            None
-        """
-        new = []
-        for signal in self.signals:
-            if not signal.multimodal():
-                new.append(signal)
-        self.signals = new
-
     def clean_empty(self, threshold=None):
         """
         Remove signals without peaks from the run.
