@@ -79,7 +79,7 @@ class Signal():
             data = [row for row in reader]
 
             #Extract the units of the signal from the header
-            self.units = data[1]
+            self.units = tuple(data[1])
 
             #Eliminate the three header lines
             data = data[3:]
