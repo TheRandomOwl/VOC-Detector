@@ -226,6 +226,7 @@ class Run():
         Initialize a run instance from a specified folder of .txt files.
         Parameters:
             foldername (str): Path to the folder containing .txt files.
+            y_offset (float, optional): The amount to shift the y values of the signals. Default is 0.
             cache (bool, optional): If True, save the run object to cache. Default is True.
             smoothness (int, optional): The size of the window for smoothing the signals. Default is 'default'.
         Returns:
