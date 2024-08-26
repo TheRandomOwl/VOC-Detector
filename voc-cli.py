@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.6.2'
+VER = '0.6.3'
 API = voc.VER
 
 # Helper Functions
@@ -113,7 +113,7 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         click.echo(f"Average voltage of {A.name}: {A.avg_voltage()}")
         click.echo(f"Average voltage of {B.name}: {B.avg_voltage()}")
     elif method == 'correlation':
-        click.echo(f"Correlation coefficient: {voc.lin_similarity(A,B)}")
+        click.echo(f"Correlation coefficient: {voc.corr_coef(A,B)}")
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
