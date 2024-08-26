@@ -18,7 +18,7 @@ import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.0-beta.10'
+VER = '4.0.0'
 
 METRIC = {
     '(us)': 1e-6,
@@ -461,6 +461,8 @@ class Run():
         Returns:
             tuple: Arrays of x-values and average y-values.
         """
+        if len(self.signals) == 0:
+            raise ValueError("No signals to average.")
         # Extract the y or yf arrays
         y_arrays = [s.yf if fft else s.y for s in self.signals]
         
