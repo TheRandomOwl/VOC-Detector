@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.6.3'
+VER = '0.7.0'
 API = voc.VER
 
 # Helper Functions
@@ -114,6 +114,29 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         click.echo(f"Average voltage of {B.name}: {B.avg_voltage()}")
     elif method == 'correlation':
         click.echo(f"Correlation coefficient: {voc.corr_coef(A,B)}")
+
+# Export Command
+@cli.command()
+@click.argument('data', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('save-path', type=click.Path(file_okay=True, dir_okay=True))
+@click.option('--save-as', type=click.Choice(['single', 'multi']), default='single', help="Export as multiple CSV files or as a single CSV file. Default is single.")
+@click.pass_context
+def export(ctx, data, save_path, save_as):
+    """Export the signals of a run to CSV files."""
+
+    save_path = Path(save_path)
+
+    signals = voc.Run(data, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
+    if ctx.obj['min'] != None:
+        signals.clean_empty(ctx.obj['min'])
+    
+    if save_as == 'multi':
+        validate_dir(save_path)
+        signals.export(save_path)
+        click.echo(f"Exported signals to folder: {save_path}")
+    elif save_as == 'single':
+        signals.export_all(save_path)
+        click.echo(f"Exported signals to: {save_path}")
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
