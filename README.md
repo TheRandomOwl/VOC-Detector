@@ -1,4 +1,5 @@
 ## Build voc-gui and voc-cli
+Install python https://www.python.org/
 
 Use the package manager pip to install the necessary dependencies.
 
@@ -14,5 +15,5 @@ pyinstaller -F --hidden-import=PIL._tkinter_finder --hide-console minimize-early
 pyinstaller -F --hidden-import=PIL._tkinter_finder voc-cli.py
 ```
 
-## How to use:  
+## How to use
 to do
