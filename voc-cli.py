@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.7.0'
+VER = '0.7.1'
 API = voc.VER
 
 # Helper Functions
@@ -132,10 +132,10 @@ def export(ctx, data, save_path, save_as):
     
     if save_as == 'multi':
         validate_dir(save_path)
-        signals.export(save_path)
+        signals.export(save_path, fft=ctx.obj['fft'])
         click.echo(f"Exported signals to folder: {save_path}")
     elif save_as == 'single':
-        signals.export_all(save_path)
+        signals.export_all(save_path, fft=ctx.obj['fft'])
         click.echo(f"Exported signals to: {save_path}")
 
 if __name__ == '__main__':
