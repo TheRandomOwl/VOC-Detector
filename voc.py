@@ -18,7 +18,7 @@ import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.0'
+VER = '4.0.1'
 
 METRIC = {
     '(us)': 1e-6,
