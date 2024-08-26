@@ -1,16 +1,17 @@
-## Build voc-gui and voc-cli for Windows
-Install python https://www.python.org/
-Select Add python.exe to PATH
+## Build `voc-gui` and `voc-cli` for Windows
 
-Use the package manager pip to install the necessary dependencies.
+1. **Install Python**:  
+   Download and install Python from [python.org](https://www.python.org/).
 
-```bash
-pip install -r requirements.txt
+2. **Add Python to PATH**:  
+   During installation, ensure that you select the option to "Add python.exe to PATH."
 
-pyinstaller -F --hidden-import=PIL._tkinter_finder --hide-console minimize-early voc-gui.py
+3. **Run the Build Script**:  
+   Execute the `build.bat` script to create the `voc-cli.exe` and `voc-gui.exe` files.
 
-pyinstaller -F --hidden-import=PIL._tkinter_finder voc-cli.py
-```
+4. **Locate the Executables**:  
+   The `voc-cli.exe` and `voc-gui.exe` programs should be located in the `dist` folder.
 
-## How to use
-to do
+## How to Use
+
+*To be done.*
