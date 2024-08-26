@@ -404,6 +404,10 @@ class Run():
         Returns:
             None
         """
+        filepath = Path(filepath)
+        if filepath.is_dir():
+            filepath = filepath / (self.name + '.csv')
+
         data = []
         header = []
 
