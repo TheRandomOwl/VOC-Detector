@@ -486,9 +486,7 @@ class Run():
         x, avg_y = self.avg_signal(fft)
         if fft:
             # put y in the form a + bi as a string
-            y = []
-            for j in range(len(avg_y)):
-                y.append(f"{avg_y[j].real}{'+' if avg_y[j].imag >= 0 else '-'}{np.abs(avg_y[j].imag)}i")
+            y = [f"{num.real}{'+' if num.imag >= 0 else '-'}{np.abs(num.imag)}i" for num in avg_y]
             export(filepath, x, y, header=['(Hz)', 'Units'])
         else:
             export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
