@@ -18,7 +18,7 @@ import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.0-beta.9'
+VER = '4.0.0-beta.10'
 
 METRIC = {
     '(us)': 1e-6,
@@ -210,6 +210,21 @@ class Signal():
         # Display the plot
         plt.show()
 
+    def export(self, filepath, fft = False):
+        """
+        Export the signal to a file.
+        Parameters:
+            filepath (str): The path to the output file.
+        Returns:
+            None
+        """
+        if fft:
+            # put y in the form a + bi as a string
+            y = [f"{num.real}{'+' if num.imag >= 0 else '-'}{np.abs(num.imag)}i" for num in self.yf]
+            export(filepath, self.xf, y, header=['(Hz)', 'Units'])
+        else:
+            export(filepath, self.x, self.y, header=[self.units[0], self.units[1]])
+
 class Run():
     """
     Class representing a run of signals.
@@ -358,6 +373,60 @@ class Run():
         s.smooth(smoothness)
         return s
     
+    def export(self, folder, fft = False):
+        """
+        Export every signal in the run to a specified folder.
+        Parameters:
+            folder (str): Directory to save the output files.
+            fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
+        Returns:
+            None
+        """
+        with multiprocessing.Pool() as pool:
+            # Use pool.map to parallelize the exporting of signals
+            list(tqdm(pool.imap(self.export_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals"))
+
+    @staticmethod
+    def export_signals(args):
+        s, folder, fft = args
+        s.export(os.path.join(folder, s.name[:-4] + '.csv'), fft)
+        return s
+    
+    # export signals to a single file
+    def export_all(self, filepath, fft = False, show_name = False):
+        """
+        Export all signals in the run to a single file.
+        Parameters:
+            filepath (str): The path to the output file.
+            fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
+            label (bool, optional): If True, include a header with the units of the signals. Default is False.
+            show_name (bool, optional): If True, include the name of the signal in the header. Default is False.
+        Returns:
+            None
+        """
+        data = []
+        header = []
+
+        for s in self.signals:
+            if fft:
+                # put y in the form a + bi as a string
+                y = [f"{num.real}{'+' if num.imag >= 0 else '-'}{np.abs(num.imag)}i" for num in s.yf]
+
+                header.append(f"(Hz) {s.name}" if show_name else "(Hz)")
+                header.append('Units')
+                
+                data.append(s.xf)
+                data.append(y)
+            else:
+                data.append(s.x)
+                data.append(s.y)
+
+                header.append(f"{s.units[0]} {s.name}" if show_name else s.units[0])
+                header.append(s.units[1])
+
+        
+        export(filepath, *data, header=header)
+
     def fft(self, metric_prefix = None):
         """
         Calculate the FFT for every signal in the run.
@@ -402,6 +471,25 @@ class Run():
         x = self.signals[0].xf if fft else self.signals[0].x
         
         return x, avg_y
+    
+    def export_avg(self, filepath, fft = False):
+        """
+        Export the average signal or FFT for the run to a file.
+        Parameters:
+            filepath (str): The path to the output file.
+            fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
+        Returns:
+            None
+        """
+        x, avg_y = self.avg_signal(fft)
+        if fft:
+            # put y in the form a + bi as a string
+            y = []
+            for j in range(len(avg_y)):
+                y.append(f"{avg_y[j].real}{'+' if avg_y[j].imag >= 0 else '-'}{np.abs(avg_y[j].imag)}i")
+            export(filepath, x, y, header=['(Hz)', 'Units'])
+        else:
+            export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
     
     def avg_area(self):
         """
@@ -503,7 +591,7 @@ def plot_average_signals(A, B, filepath = None, fft=False):
     
     plt.clf()
 
-def lin_similarity(A, B):
+def corr_coef(A, B):
     """
     Calculate the similarity between two runs.
     Parameters:
@@ -515,6 +603,34 @@ def lin_similarity(A, B):
     _, A_y = A.avg_signal()
     _, B_y = B.avg_signal()
     return np.corrcoef(A_y, B_y)[0, 1]
+
+def export(filepath, *lists, header=None):
+    """
+    Export data to a file.
+
+    Parameters:
+        filepath (str): The path to the output file.
+        *lists (array-like): The lists of values to export. Each list will be a column in the CSV.
+        header (list, optional): The header to write to the output file.
+    
+    Returns:
+        None
+    """
+    # Find the maximum length of the lists to handle cases where lists have different lengths
+    max_length = max(len(lst) for lst in lists)
+
+    with open(filepath, 'w', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write the header if provided
+        if header != None:
+            writer.writerow(header)
+        
+        # Write the lists row by row
+        for i in range(max_length):
+            row = [lst[i] if i < len(lst) else '' for lst in lists]
+            writer.writerow(row)
+
 """
 The following functions are used to save and load run objects to and from the filesystem.
 """
