@@ -16,7 +16,7 @@
 
 ### VOC-CLI
 
-`voc-cli.py` is a CLI tool to analyze data from Picoscope 7.
+`voc-cli` is a CLI tool to analyze data from Picoscope 7.
 
 **Usage**: `voc-cli.py [OPTIONS] COMMAND [ARGS]...`
 
@@ -30,7 +30,7 @@
 - `--help`                      Show this message and exit.
 
 **Example**:
-   ```bash
+   ```
    voc-cli.py --y-offset 400 --threshold 75 COMMAND [ARGS]...
    ```
 
@@ -42,7 +42,7 @@
     - `--method [plot|area|max]`  Method to analyze signals. Default is plot.
     - `--help`                    Show this message and exit.
   - **Example**:
-    ```bash
+    ```
     voc-cli.py average --save-dir results/average_plot --method area data/run1
     ```
 
@@ -53,7 +53,7 @@
     - `--method [avg-plot|avg-area|avg-max|average|correlation]`  Method to compare signals. Default is avg-plot.
     - `--help`                          Show this message and exit.
   - **Example**:
-    ```bash
+    ```
     voc-cli.py compare --save-dir results/comparison_plot --method avg-area data/run1 data/run2
     ```
 
@@ -63,7 +63,7 @@
     - `--save-as [single|multi]`  Export as multiple CSV files or as a single CSV file. Default is single.
     - `--help`                    Show this message and exit.
   - **Example**:
-    ```bash
+    ```
     voc-cli.py export --save-as multi data/run1 results/data_export
     ```
 
@@ -72,7 +72,7 @@
   - **Options**:
     - `--help`  Show this message and exit.
   - **Example**:
-    ```bash
+    ```
     voc-cli.py plot data/run1 results/plots
     ```
     
