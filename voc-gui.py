@@ -5,7 +5,7 @@ import multiprocessing
 import voc
 
 # Version Information
-VER = '0.2.0'
+VER = '0.3.0'
 API = voc.VER
 
 # Helper Functions
@@ -72,7 +72,9 @@ class VocGuiApp(tk.Tk):
         tk.Button(buttons_frame, text="Plot Signals", command=self.plot_signals).grid(row=0, column=0, padx=5)
         tk.Button(buttons_frame, text="Show Avg Signal", command=self.show_avg_signal).grid(row=0, column=1, padx=5)
         tk.Button(buttons_frame, text="Compare Runs", command=self.compare_runs).grid(row=0, column=2, padx=5)
-        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=0, column=3, padx=5)
+        tk.Button(buttons_frame, text="Export to one CSV", command=self.export_to_csv).grid(row=1, column=0, padx=5)
+        tk.Button(buttons_frame, text="Export to multiple CSVs", command=self.export_multi).grid(row=1, column=1, padx=5)
+        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5)
 
     def select_folder(self):
         folder = filedialog.askdirectory(title="Select Folder")
@@ -100,6 +102,34 @@ class VocGuiApp(tk.Tk):
         signals.clean_empty(self.threshold_var.get())
         signals.plot(save_dir_path, fft=self.fft_var.get())
         messagebox.showinfo("Success", f"Plotted signals to folder: {save_dir_path}")
+
+    def export_multi(self):
+        folder = self.folder_entry.get()
+        save_dir = Path(self.save_dir_entry.get())
+        if not folder or not save_dir:
+            messagebox.showerror("Error", "Both folder and save directory must be selected.")
+            return
+        
+        validate_dir(save_dir)
+
+        signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
+        signals.clean_empty(self.threshold_var.get())
+        signals.export(save_dir, fft=self.fft_var.get())
+        messagebox.showinfo("Success", f"Exported signals to multiple CSVs in folder: {save_dir}")
+
+    def export_to_csv(self):
+        folder = self.folder_entry.get()
+        save_dir = Path(self.save_dir_entry.get())
+        if not folder or not save_dir:
+            messagebox.showerror("Error", "Both folder and save directory must be selected.")
+            return
+        
+        validate_dir(save_dir)
+
+        signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
+        signals.clean_empty(self.threshold_var.get())
+        signals.export_all(save_dir, fft=self.fft_var.get())
+        messagebox.showinfo("Success", f"Exported signals to CSV in folder: {save_dir}")
 
     def show_avg_signal(self):
         folder = self.folder_entry.get()
