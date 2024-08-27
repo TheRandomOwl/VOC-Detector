@@ -5,7 +5,7 @@ import multiprocessing
 import voc
 
 # Version Information
-VER = '0.3.0'
+VER = '0.3.1'
 API = voc.VER
 
 # Helper Functions
@@ -105,11 +105,11 @@ class VocGuiApp(tk.Tk):
 
     def export_multi(self):
         folder = self.folder_entry.get()
-        save_dir = Path(self.save_dir_entry.get())
+        save_dir = self.save_dir_entry.get()
         if not folder or not save_dir:
             messagebox.showerror("Error", "Both folder and save directory must be selected.")
             return
-        
+        save_dir = Path(save_dir)
         validate_dir(save_dir)
 
         signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
@@ -119,11 +119,12 @@ class VocGuiApp(tk.Tk):
 
     def export_to_csv(self):
         folder = self.folder_entry.get()
-        save_dir = Path(self.save_dir_entry.get())
+        save_dir = self.save_dir_entry.get()
         if not folder or not save_dir:
             messagebox.showerror("Error", "Both folder and save directory must be selected.")
             return
         
+        save_dir = Path(save_dir)
         validate_dir(save_dir)
 
         signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
