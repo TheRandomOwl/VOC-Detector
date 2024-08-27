@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.7.2'
+VER = '0.7.3'
 API = voc.VER
 
 # Helper Functions
@@ -41,7 +41,7 @@ def cli(ctx, cache, smoothness, fft, y_offset, threshold):
 @click.argument('save-dir', type=click.Path(file_okay=False, dir_okay=True))
 @click.pass_context
 def plot(ctx, folder, save_dir):
-    """Plot all signals in a folder and save to a specified folder."""
+    """Plot all signals from a run and save them to a specified folder."""
     # cache, smoothness, fft, y_offset = get_common_options(ctx)
     save_path = Path(save_dir)
     validate_dir(save_path)
@@ -60,7 +60,7 @@ def plot(ctx, folder, save_dir):
 @click.option('--method', type=click.Choice(['plot', 'area', 'max']), default='plot', help="Method to analyze signals. Default is plot.")
 @click.pass_context
 def average(ctx, folder, save_dir, method):
-    """Plot the average signal or FFT for a run."""
+    """Analyze the average signal for a run. Only the plot method works with fft."""
 
     if save_dir != None:
         save_dir = Path(save_dir)
@@ -88,7 +88,7 @@ def average(ctx, folder, save_dir, method):
               , default='avg-plot', help="Method to compare signals. Default is avg-plot.")
 @click.pass_context
 def compare(ctx, folder_a, folder_b, save_dir, method):
-    """Compare the signals of two runs."""
+    """Compare the signals of two runs. Only the method avg-plot supports fft."""
     if save_dir != None:
         save_dir = Path(save_dir)
         validate_dir(save_dir)
