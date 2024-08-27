@@ -18,7 +18,7 @@ import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.4'
+VER = '4.0.5'
 
 METRIC = {
     '(us)': 1e-6,
@@ -293,6 +293,9 @@ class Run():
 
         # Filter out any None results (in case of errors)
         self.signals = [res for res in results if res is not None]
+
+        if len(self.signals) == 0:
+            raise ValueError("No signals could be loaded")
 
         # Get units from signals
         self.units = self.signals[0].units
