@@ -12,7 +12,7 @@
 4. **Locate the Executables**:  
    The `voc-cli.exe` and `voc-gui.exe` programs should be located in the `dist` folder.
 
-# How to Use
+# Usage Guide
 
 ## VOC-CLI
 
