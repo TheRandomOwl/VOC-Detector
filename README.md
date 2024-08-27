@@ -29,6 +29,11 @@
 - `--threshold FLOAT`           Minimum peak height for a signal to be included.
 - `--help`                      Show this message and exit.
 
+**Example**:
+   ```bash
+   voc-cli.py --y-offset 400 --threshold 75 COMMAND [ARGS]...
+   ```
+
 **Commands**:
 - `average`  Analyze the average signal for a run. Only the plot method works with fft.
   - **Usage**: `voc-cli.py average [OPTIONS] FOLDER`
