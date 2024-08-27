@@ -1,4 +1,4 @@
-## Build `voc-gui` and `voc-cli` for Windows
+# Build `voc-gui` and `voc-cli` for Windows
 
 1. **Install Python**:  
    Download and install Python from [python.org](https://www.python.org/).
@@ -12,9 +12,9 @@
 4. **Locate the Executables**:  
    The `voc-cli.exe` and `voc-gui.exe` programs should be located in the `dist` folder.
 
-## How to Use
+# How to Use
 
-### VOC-CLI
+## VOC-CLI
 
 `voc-cli` is a CLI tool to analyze data from Picoscope 7.
 
@@ -76,7 +76,7 @@
     voc-cli.py plot data/run1 results/plots
     ```
     
-### VOC-GUI
+## VOC-GUI
 
 `voc-gui` provides a graphical interface for analyzing data from Picoscope 7.
 
