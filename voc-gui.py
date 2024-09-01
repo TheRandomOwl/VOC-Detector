@@ -11,12 +11,12 @@ class VOCGUI:
         self.cli_path_var = tk.StringVar(value="voc-cli.py")
 
         # GUI Elements
-        self.create_cli_path_frame()
-        self.create_options_frame()
-        self.create_buttons_frame()
-        self.create_output_text_area()
+        self.cli_path_frame()
+        self.make_options()
+        self.make_buttons()
+        self.cli_output()
 
-    def create_cli_path_frame(self):
+    def cli_path_frame(self):
         cli_frame = tk.Frame(self.root)
         cli_frame.pack(padx=10, pady=10, fill=tk.X)
 
@@ -24,7 +24,7 @@ class VOCGUI:
         tk.Entry(cli_frame, textvariable=self.cli_path_var, width=50).grid(row=0, column=1, sticky=tk.W)
         tk.Button(cli_frame, text="Browse...", command=self.select_cli_path).grid(row=0, column=2, sticky=tk.W)
 
-    def create_options_frame(self):
+    def make_options(self):
         options_frame = tk.Frame(self.root)
         options_frame.pack(padx=10, pady=10, fill=tk.X)
 
@@ -45,7 +45,7 @@ class VOCGUI:
         tk.Label(options_frame, text="Threshold:").grid(row=2, column=1, sticky=tk.E)
         tk.Entry(options_frame, textvariable=self.threshold_var).grid(row=2, column=2, sticky=tk.W)
 
-    def create_buttons_frame(self):
+    def make_buttons(self):
         buttons_frame = tk.Frame(self.root)
         buttons_frame.pack(padx=10, pady=10, fill=tk.X)
 
@@ -56,7 +56,7 @@ class VOCGUI:
         tk.Button(buttons_frame, text="Export to Multiple CSVs", command=lambda: self.run_export(single=False)).grid(row=1, column=1, padx=5)
         tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5)
 
-    def create_output_text_area(self):
+    def cli_output(self):
         self.output_text = tk.Text(self.root, height=15, width=60)
         self.output_text.pack(pady=10)
 
