@@ -16,9 +16,10 @@ import os  # A library for loading and writing to the filesystem more easily
 from pathlib import Path # A library for handling file paths
 import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
+import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.6'
+VER = '4.0.7'
 
 METRIC = {
     '(us)': 1e-6,
@@ -289,7 +290,7 @@ class Run():
         # Create a pool of worker processes
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the loading of signals
-            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset) for f in files]), total=len(files), desc="Loading files"))
+            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset) for f in files]), total=len(files), desc="Loading files", file=sys.stdout))
 
         # Filter out any None results (in case of errors)
         self.signals = [res for res in results if res is not None]
@@ -348,7 +349,7 @@ class Run():
         """
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the plotting of signals and us tqdm to show progress
-            list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Plotting signals"))
+            list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Plotting signals", file=sys.stdout))
 
     @staticmethod
     def plot_signals(args):
@@ -368,7 +369,7 @@ class Run():
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
             self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]), 
-                            total=len(self.signals), desc="Smoothing signals"))
+                            total=len(self.signals), desc="Smoothing signals", file=sys.stdout))
     
     @staticmethod
     def smooth_signals(args):
@@ -387,7 +388,7 @@ class Run():
         """
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the exporting of signals
-            list(tqdm(pool.imap(self.export_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals"))
+            list(tqdm(pool.imap(self.export_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals", file=sys.stdout))
 
     @staticmethod
     def export_signals(args):
