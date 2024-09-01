@@ -8,7 +8,7 @@ class Gui:
         self.root.title("VOC GUI")
 
         # CLI Path
-        self.cli_path_var = tk.StringVar(value="voc-cli.py")
+        self.cli_path = tk.StringVar(value="voc-cli")
 
         # GUI Elements
         self.cli_path_frame()
@@ -21,7 +21,7 @@ class Gui:
         cli_frame.pack(padx=10, pady=10, fill=tk.X)
 
         tk.Label(cli_frame, text="VOC-CLI Path:").grid(row=0, column=0, sticky=tk.E)
-        tk.Entry(cli_frame, textvariable=self.cli_path_var, width=50).grid(row=0, column=1, sticky=tk.W)
+        tk.Entry(cli_frame, textvariable=self.cli_path, width=50).grid(row=0, column=1, sticky=tk.W)
         tk.Button(cli_frame, text="Browse...", command=self.select_cli_path).grid(row=0, column=2, sticky=tk.W)
 
     def make_options(self):
@@ -57,12 +57,12 @@ class Gui:
         tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5)
 
     def cli_output(self):
-        self.output_text = tk.Text(self.root, height=15, width=60)
+        self.output_text = tk.Text(self.root, height=15, width=80)
         self.output_text.pack(pady=10)
 
-    def run_cli_command(self, command, *args):
+    def run_cli(self, command, *args):
         try:
-            cli_path = self.cli_path_var.get()
+            cli_path = self.cli_path.get()
             result = subprocess.run(
                 [cli_path, command] + list(args),
                 stdout=subprocess.PIPE,
@@ -81,7 +81,7 @@ class Gui:
         if folder:
             save_dir = filedialog.askdirectory(title="Select Save Directory")
             if save_dir:
-                self.run_cli_command("average", "--save-dir", save_dir, folder)
+                self.run_cli("average", "--save-dir", save_dir, folder)
 
     def run_compare(self):
         folder_a = filedialog.askdirectory(title="Select Folder A")
@@ -89,7 +89,7 @@ class Gui:
         if folder_a and folder_b:
             save_dir = filedialog.askdirectory(title="Select Save Directory")
             if save_dir:
-                self.run_cli_command("compare", "--save-dir", save_dir, folder_a, folder_b)
+                self.run_cli("compare", "--save-dir", save_dir, folder_a, folder_b)
 
     def run_export(self, single=True):
         folder = filedialog.askdirectory(title="Select Data Folder")
@@ -97,22 +97,22 @@ class Gui:
             save_path = filedialog.askdirectory(title="Select Save Directory")
             if save_path:
                 save_as = "single" if single else "multi"
-                self.run_cli_command("export", "--save-as", save_as, folder, save_path)
+                self.run_cli("export", "--save-as", save_as, folder, save_path)
 
     def run_plot(self):
         folder = filedialog.askdirectory(title="Select Data Folder")
         if folder:
             save_dir = filedialog.askdirectory(title="Select Save Directory")
             if save_dir:
-                self.run_cli_command("plot", folder, save_dir)
+                self.run_cli("plot", folder, save_dir)
 
     def show_version_info(self):
-        self.run_cli_command("--version")
+        self.run_cli("--version")
 
     def select_cli_path(self):
         path = filedialog.askopenfilename(title="Select VOC-CLI Executable")
         if path:
-            self.cli_path_var.set(path)
+            self.cli_path.set(path)
 
 if __name__ == '__main__':
     root = tk.Tk()
