@@ -108,8 +108,8 @@ class Gui:
                 self.run_cli("average", "--save-dir", save_dir, folder)
 
     def run_compare(self):
-        folder_a = filedialog.askdirectory(title="Select Folder A")
-        folder_b = filedialog.askdirectory(title="Select Folder B")
+        folder_a = filedialog.askdirectory(title="Select First Run")
+        folder_b = filedialog.askdirectory(title="Select Second Run")
         if folder_a and folder_b:
             save_dir = filedialog.askdirectory(title="Select Save Directory")
             if save_dir:
