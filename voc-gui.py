@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import subprocess
+import threading
 
 class Gui:
     def __init__(self, root):
@@ -65,22 +66,39 @@ class Gui:
         self.output_text.pack(pady=10, fill='both', expand=True)
 
     def run_cli(self, command, *args):
-        try:
-            cli_path = self.cli_path.get()
-            result = subprocess.run(
-                [cli_path, command] + list(args),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            self.output_text.config(state="normal")  # Temporarily set the state to normal
-            self.output_text.delete(1.0, tk.END)
-            self.output_text.insert(tk.END, result.stdout)
-            self.output_text.config(state="disabled")  # Set it back to disabled
-            if result.stderr:
-                messagebox.showerror("Error", result.stderr)
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        """Run CLI command in a separate thread and update the text box in real-time."""
+        def run():
+            try:
+                cli_path = self.cli_path.get()
+                process = subprocess.Popen(
+                    [cli_path, command] + list(args),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
+                )
+
+                # Continuously read the output
+                for line in process.stdout:
+                    self.update_output(line)
+
+                # Handle errors, if any
+                stderr_output, _ = process.communicate()
+                if stderr_output:
+                    messagebox.showerror("Error", stderr_output)
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+        # Start the CLI command in a separate thread
+        threading.Thread(target=run).start()
+
+    def update_output(self, text):
+        """Update the text box with the given text."""
+        self.output_text.config(state="normal")
+        self.output_text.insert(tk.END, text)
+        self.output_text.see(tk.END)  # Auto-scroll to the end
+        self.output_text.config(state="disabled")
 
     def run_average(self):
         folder = filedialog.askdirectory(title="Select Data Folder")
