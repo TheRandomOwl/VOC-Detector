@@ -88,7 +88,7 @@ class Gui:
                 if stderr_output:
                     messagebox.showerror("Error", stderr_output)
             except Exception as e:
-                messagebox.showerror("Error", str(e))
+                messagebox.showerror("Internal Error", str(e))
 
         # Start the CLI command in a separate thread
         threading.Thread(target=run).start()
