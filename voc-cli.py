@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.7.3'
+VER = '0.7.4'
 API = voc.VER
 
 # Helper Functions
@@ -20,7 +20,7 @@ def validate_dir(path: Path):
 
 # Main CLI
 @click.group()
-@click.version_option(version=VER, message=f"Version {VER} of the voc-cli using voc API {API}")
+@click.version_option(version=VER, message=f"%(prog)s, version %(version)s, VOC API version {API}")
 @click.option('--cache/--no-cache', default=True, help="Cache the data. Default is to cache.")
 @click.option('--smoothness', type=click.IntRange(min=0), default=10, help="Smoothness of the data. Default is 10.")
 @click.option('--fft/--no-fft', default=False, help="Use FFT instead of time-domain signal. Default is no-fft.")
