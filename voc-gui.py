@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import subprocess
 
-class VOCGUI:
+class Gui:
     def __init__(self, root):
         self.root = root
         self.root.title("VOC GUI")
@@ -116,6 +116,6 @@ class VOCGUI:
 
 if __name__ == '__main__':
     root = tk.Tk()
-    app = VOCGUI(root)
+    app = Gui(root)
     root.mainloop()
 
