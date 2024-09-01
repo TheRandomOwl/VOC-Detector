@@ -111,9 +111,7 @@ class Gui:
         folder_a = filedialog.askdirectory(title="Select First Run")
         folder_b = filedialog.askdirectory(title="Select Second Run")
         if folder_a and folder_b:
-            save_dir = filedialog.askdirectory(title="Select Save Directory")
-            if save_dir:
-                self.run_cli("compare", "--save-dir", save_dir, folder_a, folder_b)
+            self.run_cli("compare", folder_a, folder_b)
 
     def run_export(self, single=True):
         folder = filedialog.askdirectory(title="Select Data Folder")
