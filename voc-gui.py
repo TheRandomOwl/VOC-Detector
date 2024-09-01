@@ -7,8 +7,11 @@ class Gui:
         self.root = root
         self.root.title("VOC GUI")
 
+        # Allow the window to resize
+        self.root.geometry("800x500")  # Set an initial size for the window
+
         # CLI Path
-        self.cli_path = tk.StringVar(value="voc-cli")
+        self.cli_path = tk.StringVar(value="dist/voc-cli/voc-cli")
 
         # GUI Elements
         self.cli_path_frame()
@@ -57,8 +60,9 @@ class Gui:
         tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5)
 
     def cli_output(self):
-        self.output_text = tk.Text(self.root, height=15, width=80)
-        self.output_text.pack(pady=10)
+        # Make the Text widget resizable by setting 'fill' to 'both' and 'expand' to True
+        self.output_text = tk.Text(self.root, state="disabled")
+        self.output_text.pack(pady=10, fill='both', expand=True)
 
     def run_cli(self, command, *args):
         try:
@@ -69,8 +73,10 @@ class Gui:
                 stderr=subprocess.PIPE,
                 text=True,
             )
+            self.output_text.config(state="normal")  # Temporarily set the state to normal
             self.output_text.delete(1.0, tk.END)
             self.output_text.insert(tk.END, result.stdout)
+            self.output_text.config(state="disabled")  # Set it back to disabled
             if result.stderr:
                 messagebox.showerror("Error", result.stderr)
         except Exception as e:
@@ -118,4 +124,3 @@ if __name__ == '__main__':
     root = tk.Tk()
     app = Gui(root)
     root.mainloop()
-
