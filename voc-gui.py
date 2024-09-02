@@ -103,9 +103,7 @@ class Gui:
     def run_average(self):
         folder = filedialog.askdirectory(title="Select Data Folder")
         if folder:
-            save_dir = filedialog.askdirectory(title="Select Save Directory")
-            if save_dir:
-                self.run_cli("average", "--save-dir", save_dir, folder)
+            self.run_cli("average", folder)
 
     def run_compare(self):
         folder_a = filedialog.askdirectory(title="Select First Run")
