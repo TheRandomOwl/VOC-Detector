@@ -36,7 +36,7 @@ class Gui:
         self.smoothness_var = tk.IntVar(value=10)
         self.fft_var = tk.BooleanVar(value=False)
         self.y_offset_var = tk.DoubleVar(value=0.0)
-        self.threshold_var = tk.DoubleVar(value=0.0)
+        self.threshold_var = tk.DoubleVar(value=float('-inf'))
 
         tk.Checkbutton(options_frame, text="Cache", variable=self.cache_var).grid(row=0, column=0, sticky=tk.W)
         tk.Label(options_frame, text="Smoothness:").grid(row=0, column=1, sticky=tk.E)
@@ -70,8 +70,15 @@ class Gui:
         def run():
             try:
                 cli_path = self.cli_path.get()
+                flags = [
+                         "--cache" if self.cache_var.get() else "--no-cache",
+                         "--smoothness", str(self.smoothness_var.get()),
+                         "--fft" if self.fft_var.get() else "--no-fft",
+                         "--y-offset", str(self.y_offset_var.get()),
+                         "--threshold", str(self.threshold_var.get())
+                        ]
                 process = subprocess.Popen(
-                    [cli_path, command] + list(args),
+                    [cli_path, *flags, command, *args],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
