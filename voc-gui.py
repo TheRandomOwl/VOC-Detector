@@ -111,7 +111,6 @@ class Gui:
                 for line in process.stderr:
                     err = True
                     self.update_output(line)
-                    print(line, end="", file=sys.stderr)
                 if err:
                     messagebox.showerror("Error", "An error occurred. Please check the output for more information.")
                     
