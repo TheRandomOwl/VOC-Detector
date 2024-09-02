@@ -7,10 +7,12 @@ from pathlib import Path
 from shutil import which
 import threading
 
+VER = '0.4.0'
+
 class Gui:
     def __init__(self, root):
         self.root = root
-        self.root.title("VOC GUI")
+        self.root.title(f"VOC GUI v{VER}")
 
         # Allow the window to resize
         self.root.geometry("600x500")  # Set an initial size for the window
