@@ -10,7 +10,13 @@
    Execute the `build.bat` script to create the `voc-cli.exe` and `voc-gui.exe` files.
 
 4. **Locate the Executables**:  
-   The `voc-cli.exe` and `voc-gui.exe` programs should be located in the `dist` folder.
+    The `voc-cli.exe` and `voc-gui.exe` programs should be located in the `dist` folder.
+
+5. **Install Inno Setup**:  
+   Download and install [Inno Setup](https://jrsoftware.org/isdl.php#stable).
+
+6. **Build Installer**:  
+   Open `VOC_GUI_Installer.iss` with Inno Setup and compile installer.
 
 # Usage Guide
 
