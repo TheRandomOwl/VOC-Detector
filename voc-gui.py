@@ -106,14 +106,14 @@ class Gui:
                 # Continuously read the output
                 for line in process.stdout:
                     self.update_output(line)
-                
+
                 # Continuously read the error
                 for line in process.stderr:
                     err = True
                     self.update_output(line)
                 if err:
                     messagebox.showerror("Error", "An error occurred. Please check the output for more information.")
-                    
+
             except Exception as e:
                 messagebox.showerror("Internal Error", str(e))
 

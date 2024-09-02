@@ -42,15 +42,15 @@ def mvavg(x, y, window_size):
     """
     if window_size < 1 or window_size > len(y):
         raise ValueError("Window size must be between 1 and the length of the input array.")
-    
+
     # Calculate moving average
     averages = np.convolve(y, np.ones(window_size)/window_size, mode='valid')
-    
+
     # Align x with the moving average
     start_index = window_size - 1
     aligned_x = np.asarray(x[start_index: start_index + len(averages)])
     aligned_x -= (aligned_x[0] - x[0]) / 2
-    
+
     return aligned_x, averages
 
 class Signal():
@@ -120,7 +120,7 @@ class Signal():
             plt.title(self.name)
             plt.xlabel('Time ' + self.units[0])
             plt.ylabel('Amplitude ' + self.units[1])
-            plt.plot(self.x,self.y)	
+            plt.plot(self.x,self.y)
 
         #Create the output folder if it does not already exist
         if not os.path.isdir(folder):
@@ -134,7 +134,7 @@ class Signal():
         #Save the figure and clear the plotting tool's buffer
         plt.savefig(path)
         plt.clf()
-    
+
     # Checks if there exists no peak and returns true if there isn't a peak else return false
     def is_empty(self, threshold):
         """
@@ -144,7 +144,7 @@ class Signal():
         Returns:
             bool: True if there is no peak above the threshold, False otherwise.
         """
-        
+
         return self.y.max() <= threshold
 
     def smooth(self, window_size = None):
@@ -159,7 +159,7 @@ class Signal():
             return
         elif window_size == None:
             window_size = 10
-        
+
         self.x, self.y = mvavg(self.x, self.y, window_size)
         self.fft()
 
@@ -175,7 +175,7 @@ class Signal():
         """
         # remove dc component
         y = self.y - np.mean(self.y)
-        
+
         # Convert signal time axis to seconds
         if metric_prefix == None:
             x = np.asarray(self.x) * METRIC[self.units[0]]
@@ -185,7 +185,7 @@ class Signal():
         # Sample spacing
         dt = np.mean(np.diff(x))
         n = len(x)
-        
+
         self.yf = np.fft.rfft(y)
         self.xf = np.fft.rfftfreq(n, dt)
 
@@ -200,14 +200,14 @@ class Signal():
         """
         # Plot the frequency vs. magnitude
         plt.plot(self.xf if fft else self.x, np.abs(self.yf) if fft else self.y)
-        
+
         # Label the axes
         plt.xlabel('Frequency (Hz)' if fft else 'Time ' + self.units[0])
         plt.ylabel('Magnitude' if fft else 'Amplitude ' + self.units[1])
-        
+
         # Add a title
         plt.title('FFT of the Signal' if fft else 'Signal')
-        
+
         # Display the plot
         plt.show()
 
@@ -247,15 +247,15 @@ class Run():
             smoothness (int, optional): The size of the window for smoothing the signals. Default is 'default'.
         Returns:
             None
-            
+
         """
 
         self.version = VER
-        
+
         # True if signals are smoothed
         self.smoothed = smoothness == 'default' or smoothness > 0
         self.smoothness = smoothness
-        
+
         self.name = os.path.split(foldername)[1]
         self.path = str(Path(foldername))
         self.y_offset = y_offset
@@ -283,7 +283,7 @@ class Run():
         except:
             print("Unable to load cache")
 
-        
+
         # Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
         files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.' and filename[-4:] == '.txt']
 
@@ -300,7 +300,7 @@ class Run():
 
         # Get units from signals
         self.units = self.signals[0].units
-        
+
         # Smooth the signals
         if self.smoothed:
             self.smooth(smoothness)
@@ -332,12 +332,12 @@ class Run():
             object: The signal at the specified index.
         """
         return self.signals[index]
-    
+
     #A function defining how a run object is represented when printed
     #to the command line, etc. Increases readability.
     def __repr__(self):
         return(self.name)
-    
+
     def plot(self,folder,fft = False):
         """
         Plot every signal in the run to a specified folder.
@@ -368,15 +368,15 @@ class Run():
             smoothness = None
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
-            self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]), 
+            self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]),
                             total=len(self.signals), desc="Smoothing signals", file=sys.stdout))
-    
+
     @staticmethod
     def smooth_signals(args):
         s, smoothness = args
         s.smooth(smoothness)
         return s
-    
+
     def export(self, folder, fft = False):
         """
         Export every signal in the run to a specified folder.
@@ -395,7 +395,7 @@ class Run():
         s, folder, fft = args
         s.export(os.path.join(folder, s.name[:-4] + '.csv'), fft)
         return s
-    
+
     # export signals to a single file
     def export_all(self, filepath, fft = False, show_name = False):
         """
@@ -422,7 +422,7 @@ class Run():
 
                 header.append(f"(Hz) {s.name}" if show_name else "(Hz)")
                 header.append('Units')
-                
+
                 data.append(s.xf)
                 data.append(y)
             else:
@@ -432,7 +432,7 @@ class Run():
                 header.append(f"{s.units[0]} {s.name}" if show_name else s.units[0])
                 header.append(s.units[1])
 
-        
+
         export(filepath, *data, header=header)
 
     def fft(self, metric_prefix = None):
@@ -460,7 +460,7 @@ class Run():
             if not signal.is_empty(threshold):
                 new.append(signal)
         self.signals = new
-        
+
     def avg_signal(self, fft = False):
         """
         Calculate the average signal or FFT for the run.
@@ -473,15 +473,15 @@ class Run():
             raise ValueError("No signals to average.")
         # Extract the y or yf arrays
         y_arrays = [s.yf if fft else s.y for s in self.signals]
-        
+
         # Stack the arrays along a new axis and compute the mean
         avg_y = np.mean(np.stack(y_arrays), axis=0)
-        
+
         # Extract the corresponding x or xf array (assuming they are the same for all signals)
         x = self.signals[0].xf if fft else self.signals[0].x
-        
+
         return x, avg_y
-    
+
     def export_avg(self, filepath, fft = False):
         """
         Export the average signal or FFT for the run to a file.
@@ -498,7 +498,7 @@ class Run():
             export(filepath, x, y, header=['(Hz)', 'Units'])
         else:
             export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
-    
+
     def avg_area(self):
         """
         Calculate the average area under the curve for the run.
@@ -507,7 +507,7 @@ class Run():
         """
         areas = [trapezoid(s.y, s.x) for s in self.signals]
         return np.mean(areas)
-    
+
     def avg_max(self):
         """
         Calculate the average maximum value for the run.
@@ -516,7 +516,7 @@ class Run():
         """
         maxes = [s.y.max() for s in self.signals]
         return np.mean(maxes)
-    
+
     def avg_voltage(self):
         """
         Calculate the average voltage for the run.
@@ -546,17 +546,17 @@ class Run():
         plt.ylabel('Magnitude' if fft else 'Amplitude ' + self.units[1])
         plt.ylim(bottom=ybottom, top=ytop)
         plt.xlim(left=xleft, right=xright)
-        
+
         if filepath == None:
             plt.show()
         else:
             plt.savefig(os.path.join(filepath, self.name + '_avg_signals.png'))
-        
+
         plt.clf()
-        
+
 def plot_average_signals(A, B, filepath = None, fft=False):
     """
-    Plot the average signal or FFT for two runs. Useful for subjectively identifying 
+    Plot the average signal or FFT for two runs. Useful for subjectively identifying
     typical signal differences between two treatments.
     Parameters:
         A (run): The first run.
@@ -568,7 +568,7 @@ def plot_average_signals(A, B, filepath = None, fft=False):
         None
     """
     A_x, A_y = A.avg_signal(fft)
-    
+
     B_x, B_y = B.avg_signal(fft)
 
     #Clear the plotting tool
@@ -596,7 +596,7 @@ def plot_average_signals(A, B, filepath = None, fft=False):
         plt.show()
     else:
         plt.savefig(os.path.join(filepath, A.name + '-' + B.name + '_avg_signals.png'))
-    
+
     plt.clf()
 
 def corr_coef(A, B):
@@ -620,7 +620,7 @@ def export(filepath, *lists, header=None):
         filepath (str): The path to the output file.
         *lists (array-like): The lists of values to export. Each list will be a column in the CSV.
         header (list, optional): The header to write to the output file.
-    
+
     Returns:
         None
     """
@@ -629,11 +629,11 @@ def export(filepath, *lists, header=None):
 
     with open(filepath, 'w', newline='') as file:
         writer = csv.writer(file)
-        
+
         # Write the header if provided
         if header != None:
             writer.writerow(header)
-        
+
         # Write the lists row by row
         for i in range(max_length):
             row = [lst[i] if i < len(lst) else '' for lst in lists]
@@ -650,6 +650,6 @@ def save(run):
 def load(file):
     with open(file,'rb') as f:
         return pickle.load(f)
-    
+
 if __name__ == '__main__':
     print(VER)

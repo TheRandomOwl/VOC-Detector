@@ -65,11 +65,11 @@ def average(ctx, folder, save_dir, method):
     if save_dir != None:
         save_dir = Path(save_dir)
         validate_dir(save_dir)
-    
+
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
         signals.clean_empty(ctx.obj['min'])
-    
+
     if method == 'plot':
         signals.plot_average_signal(save_dir, fft=ctx.obj['fft'])
         if save_dir != None:
@@ -98,7 +98,7 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
     if ctx.obj['min'] != None:
         A.clean_empty(ctx.obj['min'])
         B.clean_empty(ctx.obj['min'])
-    
+
     if method == 'avg-plot':
         voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
         if save_dir != None:
@@ -129,7 +129,7 @@ def export(ctx, data, save_path, save_as):
     signals = voc.Run(data, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
         signals.clean_empty(ctx.obj['min'])
-    
+
     if save_as == 'multi':
         validate_dir(save_path)
         signals.export(save_path, fft=ctx.obj['fft'])
