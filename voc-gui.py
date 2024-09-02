@@ -13,7 +13,7 @@ class Gui:
         self.root.title("VOC GUI")
 
         # Allow the window to resize
-        self.root.geometry("800x500")  # Set an initial size for the window
+        self.root.geometry("600x500")  # Set an initial size for the window
 
         # Automatically set the path to the CLI executable based on the platform
         if platform.system() == "Windows":
