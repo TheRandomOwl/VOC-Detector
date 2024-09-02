@@ -492,21 +492,6 @@ class Run():
 
         return x, avg_y
 
-    def export_avg(self, filepath, fft = False):
-        """
-        Export the average signal or FFT for the run to a file.
-        Parameters:
-            filepath (str): The path to the output file.
-            fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
-        Returns:
-            None
-        """
-        x, avg_y = self.avg_signal(fft)
-        if fft:
-            export(filepath, x, np.abs(avg_y), header=['(Hz)', 'Units'])
-        else:
-            export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
-
     def avg_area(self):
         """
         Calculate the average area under the curve for the run.
