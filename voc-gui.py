@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import subprocess
 import sys
+import platform
+from pathlib import Path
+from shutil import which
 import threading
 
 class Gui:
@@ -12,8 +15,18 @@ class Gui:
         # Allow the window to resize
         self.root.geometry("800x500")  # Set an initial size for the window
 
-        # CLI Path
-        self.cli_path = tk.StringVar(value="dist/voc-cli/voc-cli")
+        # Automatically set the path to the CLI executable based on the platform
+        if platform.system() == "Windows":
+            path = (Path(__file__).parent/'..'/'..').resolve() / 'voc-cli' / 'voc-cli.exe'
+            if path.exists():
+                self.cli_path = tk.StringVar(value=str(path))
+            else:
+                self.cli_path = tk.StringVar(value="dist\\voc-cli\\voc-cli.exe")
+        else:
+            if which("voc-cli"):
+                self.cli_path = tk.StringVar(value=which("voc-cli"))
+            else:
+                self.cli_path = tk.StringVar(value="dist/voc-cli")
 
         # GUI Elements
         self.cli_path_frame()
