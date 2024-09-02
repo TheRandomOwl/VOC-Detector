@@ -1,40 +1,58 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import subprocess
+import sys
+import platform
 from pathlib import Path
-import multiprocessing
-import voc
+from shutil import which
+import threading
 
-# Version Information
-VER = '0.3.1'
-API = voc.VER
+VER = '0.4.0'
 
-# Helper Functions
-def validate_dir(path: Path):
-    """Create directory if it doesn't exist."""
-    if not path.exists():
-        path.mkdir(parents=True, exist_ok=True)
+class Gui:
+    def __init__(self, root):
+        self.root = root
+        self.root.title(f"VOC GUI v{VER}")
 
-# Main GUI Class
-class VocGuiApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title(f"Voc CLI GUI (Version {VER})")
+        # Allow the window to resize
+        self.root.geometry("600x500")  # Set an initial size for the window
 
-        # Cache, Smoothness, FFT, Y-Offset Options
+        # Automatically set the path to the CLI executable based on the platform
+        if platform.system() == "Windows":
+            path = (Path(__file__).parent/'..'/'..').resolve() / 'voc-cli' / 'voc-cli.exe'
+            if path.exists():
+                self.cli_path = tk.StringVar(value=str(path))
+            else:
+                self.cli_path = tk.StringVar(value="dist\\voc-cli\\voc-cli.exe")
+        else:
+            if which("voc-cli"):
+                self.cli_path = tk.StringVar(value=which("voc-cli"))
+            else:
+                self.cli_path = tk.StringVar(value="dist/voc-cli")
+
+        # GUI Elements
+        self.cli_path_frame()
+        self.make_options()
+        self.make_buttons()
+        self.cli_output()
+
+    def cli_path_frame(self):
+        cli_frame = tk.Frame(self.root)
+        cli_frame.pack(padx=10, pady=10, fill=tk.X)
+
+        tk.Label(cli_frame, text="VOC-CLI Path:").grid(row=0, column=0, sticky=tk.E)
+        tk.Entry(cli_frame, textvariable=self.cli_path, width=50).grid(row=0, column=1, sticky=tk.W)
+        tk.Button(cli_frame, text="Browse...", command=self.select_cli_path).grid(row=0, column=2, sticky=tk.W)
+
+    def make_options(self):
+        options_frame = tk.Frame(self.root)
+        options_frame.pack(padx=10, pady=10, fill=tk.X)
+
         self.cache_var = tk.BooleanVar(value=True)
         self.smoothness_var = tk.IntVar(value=10)
         self.fft_var = tk.BooleanVar(value=False)
         self.y_offset_var = tk.DoubleVar(value=0.0)
         self.threshold_var = tk.DoubleVar(value=float('-inf'))
-
-        self.create_widgets()
-
-    def create_widgets(self):
-        """Create the GUI layout similar to CLI options and commands."""
-
-        # Options Frame
-        options_frame = tk.Frame(self)
-        options_frame.pack(padx=10, pady=10, fill=tk.X)
 
         tk.Checkbutton(options_frame, text="Cache", variable=self.cache_var).grid(row=0, column=0, sticky=tk.W)
         tk.Label(options_frame, text="Smoothness:").grid(row=0, column=1, sticky=tk.E)
@@ -47,134 +65,103 @@ class VocGuiApp(tk.Tk):
         tk.Label(options_frame, text="Threshold:").grid(row=2, column=1, sticky=tk.E)
         tk.Entry(options_frame, textvariable=self.threshold_var).grid(row=2, column=2, sticky=tk.W)
 
-        # Folder Selection Frame
-        folder_frame = tk.Frame(self)
-        folder_frame.pack(padx=10, pady=10, fill=tk.X)
-
-        tk.Label(folder_frame, text="Folder:").grid(row=0, column=0, sticky=tk.E)
-        self.folder_entry = tk.Entry(folder_frame, width=50)
-        self.folder_entry.grid(row=0, column=1, sticky=tk.W)
-        tk.Button(folder_frame, text="Browse...", command=self.select_folder).grid(row=0, column=2, sticky=tk.W)
-
-        # Save Directory Frame
-        save_dir_frame = tk.Frame(self)
-        save_dir_frame.pack(padx=10, pady=10, fill=tk.X)
-
-        tk.Label(save_dir_frame, text="Save Dir:").grid(row=0, column=0, sticky=tk.E)
-        self.save_dir_entry = tk.Entry(save_dir_frame, width=50)
-        self.save_dir_entry.grid(row=0, column=1, sticky=tk.W)
-        tk.Button(save_dir_frame, text="Browse...", command=self.select_save_dir).grid(row=0, column=2, sticky=tk.W)
-
-        # Buttons for Operations
-        buttons_frame = tk.Frame(self)
+    def make_buttons(self):
+        buttons_frame = tk.Frame(self.root)
         buttons_frame.pack(padx=10, pady=10, fill=tk.X)
 
-        tk.Button(buttons_frame, text="Plot Signals", command=self.plot_signals).grid(row=0, column=0, padx=5)
-        tk.Button(buttons_frame, text="Show Avg Signal", command=self.show_avg_signal).grid(row=0, column=1, padx=5)
-        tk.Button(buttons_frame, text="Compare Runs", command=self.compare_runs).grid(row=0, column=2, padx=5)
-        tk.Button(buttons_frame, text="Export to one CSV", command=self.export_to_csv).grid(row=1, column=0, padx=5)
-        tk.Button(buttons_frame, text="Export to multiple CSVs", command=self.export_multi).grid(row=1, column=1, padx=5)
+        tk.Button(buttons_frame, text="Plot Signals", command=self.run_plot).grid(row=0, column=0, padx=5)
+        tk.Button(buttons_frame, text="Show Avg Signal", command=self.run_average).grid(row=0, column=1, padx=5)
+        tk.Button(buttons_frame, text="Compare Runs", command=self.run_compare).grid(row=0, column=2, padx=5)
+        tk.Button(buttons_frame, text="Export to One CSV", command=lambda: self.run_export(single=True)).grid(row=1, column=0, padx=5)
+        tk.Button(buttons_frame, text="Export to Multiple CSVs", command=lambda: self.run_export(single=False)).grid(row=1, column=1, padx=5)
         tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5)
 
-    def select_folder(self):
-        folder = filedialog.askdirectory(title="Select Folder")
+    def cli_output(self):
+        # Make the Text widget resizable by setting 'fill' to 'both' and 'expand' to True
+        self.output_text = tk.Text(self.root, state="disabled")
+        self.output_text.pack(pady=10, fill='both', expand=True)
+
+    def run_cli(self, command, *args):
+        """Run CLI command in a separate thread and update the text box in real-time."""
+        def run():
+            try:
+                cli_path = self.cli_path.get()
+                flags = [
+                         "--cache" if self.cache_var.get() else "--no-cache",
+                         "--smoothness", str(self.smoothness_var.get()),
+                         "--fft" if self.fft_var.get() else "--no-fft",
+                         "--y-offset", str(self.y_offset_var.get()),
+                         "--threshold", str(self.threshold_var.get())
+                        ]
+                process = subprocess.Popen(
+                    [cli_path, *flags, command, *args],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
+                )
+
+                err = False
+                # Continuously read the output
+                for line in process.stdout:
+                    self.update_output(line)
+
+                # Continuously read the error
+                for line in process.stderr:
+                    err = True
+                    self.update_output(line)
+                if err:
+                    messagebox.showerror("Error", "An error occurred. Please check the output for more information.")
+
+            except Exception as e:
+                messagebox.showerror("Internal Error", str(e))
+
+        # Start the CLI command in a separate thread
+        threading.Thread(target=run).start()
+
+    def update_output(self, text):
+        """Update the text box with the given text."""
+        self.output_text.config(state="normal")
+        self.output_text.insert(tk.END, text)
+        self.output_text.see(tk.END)  # Auto-scroll to the end
+        self.output_text.config(state="disabled")
+
+    def run_average(self):
+        folder = filedialog.askdirectory(title="Select Data Folder")
         if folder:
-            self.folder_entry.delete(0, tk.END)
-            self.folder_entry.insert(0, folder)
+            self.run_cli("average", folder)
 
-    def select_save_dir(self):
-        save_dir = filedialog.askdirectory(title="Select Save Directory")
-        if save_dir:
-            self.save_dir_entry.delete(0, tk.END)
-            self.save_dir_entry.insert(0, save_dir)
+    def run_compare(self):
+        folder_a = filedialog.askdirectory(title="Select First Run")
+        folder_b = filedialog.askdirectory(title="Select Second Run")
+        if folder_a and folder_b:
+            self.run_cli("compare", folder_a, folder_b)
 
-    def plot_signals(self):
-        folder = self.folder_entry.get()
-        save_dir = self.save_dir_entry.get()
-        if not folder or not save_dir:
-            messagebox.showerror("Error", "Both folder and save directory must be selected.")
-            return
+    def run_export(self, single=True):
+        folder = filedialog.askdirectory(title="Select Data Folder")
+        if folder:
+            save_path = filedialog.askdirectory(title="Select Save Directory")
+            if save_path:
+                save_as = "single" if single else "multi"
+                self.run_cli("export", "--save-as", save_as, folder, save_path)
 
-        save_dir_path = Path(save_dir)
-        validate_dir(save_dir_path)
-
-        signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        signals.clean_empty(self.threshold_var.get())
-        signals.plot(save_dir_path, fft=self.fft_var.get())
-        messagebox.showinfo("Success", f"Plotted signals to folder: {save_dir_path}")
-
-    def export_multi(self):
-        folder = self.folder_entry.get()
-        save_dir = self.save_dir_entry.get()
-        if not folder or not save_dir:
-            messagebox.showerror("Error", "Both folder and save directory must be selected.")
-            return
-        save_dir = Path(save_dir)
-        validate_dir(save_dir)
-
-        signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        signals.clean_empty(self.threshold_var.get())
-        signals.export(save_dir, fft=self.fft_var.get())
-        messagebox.showinfo("Success", f"Exported signals to multiple CSVs in folder: {save_dir}")
-
-    def export_to_csv(self):
-        folder = self.folder_entry.get()
-        save_dir = self.save_dir_entry.get()
-        if not folder or not save_dir:
-            messagebox.showerror("Error", "Both folder and save directory must be selected.")
-            return
-        
-        save_dir = Path(save_dir)
-        validate_dir(save_dir)
-
-        signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        signals.clean_empty(self.threshold_var.get())
-        signals.export_all(save_dir, fft=self.fft_var.get())
-        messagebox.showinfo("Success", f"Exported signals to CSV in folder: {save_dir}")
-
-    def show_avg_signal(self):
-        folder = self.folder_entry.get()
-        if not folder:
-            messagebox.showerror("Error", "Folder must be selected.")
-            return
-
-        signals = voc.Run(folder, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        signals.clean_empty(self.threshold_var.get())
-        signals.plot_average_signal(fft=self.fft_var.get())
-        messagebox.showinfo("Success", f"Displayed average signal for run in folder: {folder}")
-
-    def compare_runs(self):
-        folder_a = filedialog.askdirectory(title="Select Folder A")
-        folder_b = filedialog.askdirectory(title="Select Folder B")
-        print(folder_a, folder_b)
-        save_dir = self.save_dir_entry.get()
-
-        if not folder_a or not folder_b:
-            messagebox.showerror("Error", "Both Folder A and Folder B must be selected.")
-            return
-
-        save_path = Path(save_dir) if save_dir else None
-
-        if save_path:
-            validate_dir(save_path)
-
-        run_a = voc.Run(folder_a, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        run_a.clean_empty(self.threshold_var.get())
-        run_b = voc.Run(folder_b, cache=self.cache_var.get(), smoothness=self.smoothness_var.get(), y_offset=self.y_offset_var.get())
-        run_b.clean_empty(self.threshold_var.get())
-        voc.plot_average_signals(run_a, run_b, save_path, fft=self.fft_var.get())
-
-        if save_path:
-            messagebox.showinfo("Success", f"Compared average signals and saved plot to {save_path}")
-        else:
-            messagebox.showinfo("Success", "Compared average signals and displayed the plot.")
+    def run_plot(self):
+        folder = filedialog.askdirectory(title="Select Data Folder")
+        if folder:
+            save_dir = filedialog.askdirectory(title="Select Save Directory")
+            if save_dir:
+                self.run_cli("plot", folder, save_dir)
 
     def show_version_info(self):
-        """Display version information."""
-        version_info = f"VOC GUI: v{VER}\nUsing VOC API: v{API}"
-        messagebox.showinfo("Version Info", version_info)
+        self.run_cli("--version")
 
-if __name__ == "__main__":
-    multiprocessing.freeze_support()
-    app = VocGuiApp()
-    app.mainloop()
+    def select_cli_path(self):
+        path = filedialog.askopenfilename(title="Select VOC-CLI Executable")
+        if path:
+            self.cli_path.set(path)
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = Gui(root)
+    root.mainloop()
