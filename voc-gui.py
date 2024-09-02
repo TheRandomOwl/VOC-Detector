@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import subprocess
+import sys
 import threading
 
 class Gui:
@@ -86,14 +87,19 @@ class Gui:
                     universal_newlines=True
                 )
 
+                err = False
                 # Continuously read the output
                 for line in process.stdout:
                     self.update_output(line)
-
-                # Handle errors, if any
-                stderr_output, _ = process.communicate()
-                if stderr_output:
-                    messagebox.showerror("Error", stderr_output)
+                
+                # Continuously read the error
+                for line in process.stderr:
+                    err = True
+                    self.update_output(line)
+                    print(line, end="", file=sys.stderr)
+                if err:
+                    messagebox.showerror("Error", "An error occurred. Please check the output for more information.")
+                    
             except Exception as e:
                 messagebox.showerror("Internal Error", str(e))
 
