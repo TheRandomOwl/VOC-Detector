@@ -19,7 +19,7 @@ from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.0.7'
+VER = '4.1.0'
 
 METRIC = {
     '(us)': 1e-6,
@@ -434,6 +434,21 @@ class Run():
 
 
         export(filepath, *data, header=header)
+
+    def export_avg(self, filepath, fft = False):
+        """
+        Export the average signal or FFT for the run to a file.
+        Parameters:
+            filepath (str): The path to the output file.
+            fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
+        Returns:
+            None
+        """
+        x, avg_y = self.avg_signal(fft)
+        if fft:
+            export(filepath, x, abs(avg_y), header=['(Hz)', 'Units'])
+        else:
+            export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
 
     def fft(self, metric_prefix = None):
         """
