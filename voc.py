@@ -19,7 +19,7 @@ from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.2.0'
+VER = '4.2.1'
 
 METRIC = {
     '(us)': 1e-6,
@@ -220,7 +220,7 @@ class Signal():
             None
         """
         if fft:
-            export(filepath, self.xf, abs(self.yf), header=['(Hz)', 'Units'])
+            export(filepath, self.xf, np.abs(self.yf), header=['(Hz)', 'Units'])
         else:
             export(filepath, self.x, self.y, header=[self.units[0], self.units[1]])
 
@@ -419,7 +419,7 @@ class Run():
                 header.append('Units')
 
                 data.append(s.xf)
-                data.append(abs(s.yf))
+                data.append(np.abs(s.yf))
             else:
                 data.append(s.x)
                 data.append(s.y)
@@ -441,7 +441,7 @@ class Run():
         """
         x, avg_y = self.avg_signal(fft)
         if fft:
-            export(filepath, x, abs(avg_y), header=['(Hz)', 'Units'])
+            export(filepath, x, np.abs(avg_y), header=['(Hz)', 'Units'])
         else:
             export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
 
@@ -503,7 +503,7 @@ class Run():
         """
         x, avg_y = self.avg_signal(fft)
         if fft:
-            export(filepath, x, abs(avg_y), header=['(Hz)', 'Units'])
+            export(filepath, x, np.abs(avg_y), header=['(Hz)', 'Units'])
         else:
             export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
 
