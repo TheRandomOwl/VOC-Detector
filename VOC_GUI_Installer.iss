@@ -1,9 +1,15 @@
+#define MyAppVersion "0.5.2"
+
 [Setup]
 AppName=VOC GUI
-AppVersion=0.5.2
+AppVersion={#MyAppVersion}
+AppPublisherURL="https://github.com/TheRandomOwl/VOC-Detector"
+AppUpdatesURL="https://github.com/TheRandomOwl/VOC-Detector/releases"
+AppPublisher=Nathan Perry
+AppSupportURL="https://github.com/TheRandomOwl/VOC-Detector/blob/main/README.md"
 DefaultDirName={autopf}\VOC GUI
 DefaultGroupName=VOC GUI
-OutputBaseFilename=VOC GUI Installer
+OutputBaseFilename=VOC GUI Installer {#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 ArchitecturesAllowed=x64compatible
