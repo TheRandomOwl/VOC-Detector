@@ -1,6 +1,6 @@
-click==8.1.7
-matplotlib==3.9.1.post1
-numpy==2.0.1
-pyinstaller==6.9.0
-scipy==1.14.0
-tqdm==4.66.5
+click
+matplotlib
+numpy
+pyinstaller
+scipy
+tqdm
