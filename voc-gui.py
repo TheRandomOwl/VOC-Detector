@@ -1,13 +1,13 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import subprocess
-import sys
 import platform
 from pathlib import Path
 from shutil import which
 import threading
+import webbrowser
 
-VER = '0.4.1'
+VER = '0.4.2'
 
 class Gui:
     def __init__(self, root):
@@ -75,6 +75,7 @@ class Gui:
         tk.Button(buttons_frame, text="Export to One CSV", command=lambda: self.run_export(single=True)).grid(row=1, column=0, padx=5)
         tk.Button(buttons_frame, text="Export to Multiple CSVs", command=lambda: self.run_export(single=False)).grid(row=1, column=1, padx=5)
         tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5)
+        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/blob/main/README.md#voc-gui")).grid(row=2, column=0, padx=5)
 
     def cli_output(self):
         # Make the Text widget resizable by setting 'fill' to 'both' and 'expand' to True
