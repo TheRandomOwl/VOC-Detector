@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import which
 import threading
 
-VER = '0.4.0'
+VER = '0.4.1'
 
 class Gui:
     def __init__(self, root):
@@ -131,12 +131,16 @@ class Gui:
         folder = filedialog.askdirectory(title="Select Data Folder")
         if folder:
             self.run_cli("average", folder)
+            return
+        messagebox.showinfo("Info", "Canceled operation.")
 
     def run_compare(self):
         folder_a = filedialog.askdirectory(title="Select First Run")
         folder_b = filedialog.askdirectory(title="Select Second Run")
         if folder_a and folder_b:
             self.run_cli("compare", folder_a, folder_b)
+            return
+        messagebox.showinfo("Info", "Canceled operation.")
 
     def run_export(self, single=True):
         folder = filedialog.askdirectory(title="Select Data Folder")
@@ -145,6 +149,8 @@ class Gui:
             if save_path:
                 save_as = "single" if single else "multi"
                 self.run_cli("export", "--save-as", save_as, folder, save_path)
+                return
+        messagebox.showinfo("Info", "Canceled operation.")
 
     def run_plot(self):
         folder = filedialog.askdirectory(title="Select Data Folder")
@@ -152,6 +158,8 @@ class Gui:
             save_dir = filedialog.askdirectory(title="Select Save Directory")
             if save_dir:
                 self.run_cli("plot", folder, save_dir)
+                return
+        messagebox.showinfo("Info", "Canceled operation.")
 
     def show_version_info(self):
         self.run_cli("--version")
