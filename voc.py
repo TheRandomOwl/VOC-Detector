@@ -19,7 +19,7 @@ import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 import warnings  # A library for handling warnings
 
-VER = '4.2.8'
+VER = '4.2.9'
 
 METRIC = {
     '(us)': 1e-6,
@@ -400,14 +400,14 @@ class Run():
         return s
 
     # export signals to a single file
-    def export_all(self, filepath, fft = False, show_name = False):
+    def export_all(self, filepath, fft = False, unique = True):
         """
         Export all signals in the run to a single file.
         Parameters:
             filepath (str): The path to the output file. If a directory is provided, the file will be named after the run.
             fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
             label (bool, optional): If True, include a header with the units of the signals. Default is False.
-            show_name (bool, optional): If True, include the name of the signal in the header. Default is False.
+            unique (bool, optional): If True, include numerical identifiers for each signal in the header. Default is True.
         Returns:
             None
         """
@@ -418,10 +418,10 @@ class Run():
         data = []
         header = []
 
-        for s in self.signals:
+        for i, s in enumerate(self.signals):
             if fft:
-                header.append(f"(Hz) {s.name}" if show_name else "(Hz)")
-                header.append('Units')
+                header.append(f"(Hz) #{i}" if unique else "(Hz)")
+                header.append(f"Units #{i}" if unique else "Units")
 
                 data.append(s.xf)
                 data.append(np.abs(s.yf))
@@ -429,8 +429,8 @@ class Run():
                 data.append(s.x)
                 data.append(s.y)
 
-                header.append(f"{s.units[0]} {s.name}" if show_name else s.units[0])
-                header.append(s.units[1])
+                header.append(f"{s.units[0]} #{i}" if unique else s.units[0])
+                header.append(f"{s.units[1]} #{i}" if unique else s.units[1])
 
 
         export(filepath, *data, header=header)
