@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.7.6'
+VER = '0.8.0'
 API = voc.VER
 
 # Main CLI
@@ -71,7 +71,7 @@ def average(ctx, folder, save_dir, method):
 @click.argument('folder_a', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('folder_b', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), help="Directory to save the comparison plot. Optional.")
-@click.option('--method', type=click.Choice(['avg-plot', 'avg-area', 'avg-max', 'average', 'correlation'])
+@click.option('--method', type=click.Choice(['avg-plot', 'avg-area', 'avg-max', 'average', 'correlation', 'all'])
               , default='avg-plot', help="Method to compare signals. Default is avg-plot.")
 @click.pass_context
 def compare(ctx, folder_a, folder_b, save_dir, method):
@@ -83,20 +83,20 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         A.clean_empty(ctx.obj['min'])
         B.clean_empty(ctx.obj['min'])
 
-    if method == 'avg-plot':
+    if method == 'avg-plot' or method == 'all':
         voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
         if save_dir != None:
             click.echo(f"Saved comparison plot to folder: {save_dir}")
-    elif method == 'avg-area':
+    if method == 'avg-area' or method == 'all':
         click.echo(f"Area of {A.name}: {A.avg_area()}")
         click.echo(f"Area of {B.name}: {B.avg_area()}")
-    elif method == 'avg-max':
+    if method == 'avg-max' or method == 'all':
         click.echo(f"Max of {A.name}: {A.avg_max()}")
         click.echo(f"Max of {B.name}: {B.avg_max()}")
-    elif method == 'average':
+    if method == 'average' or method == 'all':
         click.echo(f"Average voltage of {A.name}: {A.avg_voltage()}")
         click.echo(f"Average voltage of {B.name}: {B.avg_voltage()}")
-    elif method == 'correlation':
+    if method == 'correlation' or method == 'all':
         click.echo(f"Correlation coefficient: {voc.corr_coef(A,B)}")
 
 # Export Command
