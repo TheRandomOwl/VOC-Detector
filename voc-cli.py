@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.8.1'
+VER = '0.8.2'
 API = voc.VER
 
 # Main CLI
@@ -83,10 +83,6 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         A.clean_empty(ctx.obj['min'])
         B.clean_empty(ctx.obj['min'])
 
-    if method == 'avg-plot' or method == 'all':
-        voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
-        if save_dir != None:
-            click.echo(f"Saved comparison plot to folder: {save_dir}")
     if method == 'avg-area' or method == 'all':
         click.echo(f"Area of {A.name}: {A.avg_area()} {A.units[0]}*{A.units[1]}")
         click.echo(f"Area of {B.name}: {B.avg_area()} {B.units[0]}*{B.units[1]}")
@@ -98,6 +94,10 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         click.echo(f"Average voltage of {B.name}: {B.avg_voltage()} {B.units[1]}")
     if method == 'correlation' or method == 'all':
         click.echo(f"Correlation coefficient: {voc.corr_coef(A,B)}")
+    if method == 'avg-plot' or method == 'all':
+        voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
+        if save_dir != None:
+            click.echo(f"Saved comparison plot to folder: {save_dir}")
 
 # Export Command
 @cli.command()
