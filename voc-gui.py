@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.5.1'
+VER = '0.5.2'
 
 class Gui:
     def __init__(self, root):
@@ -146,7 +146,7 @@ class Gui:
         folder_a = filedialog.askdirectory(title="Select First Run")
         folder_b = filedialog.askdirectory(title="Select Second Run")
         if folder_a and folder_b:
-            self.run_cli("compare", folder_a, folder_b)
+            self.run_cli("compare", "--method", "all",folder_a, folder_b)
             return
         messagebox.showinfo("Info", "Canceled operation.")
 
