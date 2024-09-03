@@ -9,14 +9,8 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.7.4'
+VER = '0.7.6'
 API = voc.VER
-
-# Helper Functions
-def validate_dir(path: Path):
-    """Create directory if it doesn't exist."""
-    if not path.exists():
-        path.mkdir(parents=True, exist_ok=True)
 
 # Main CLI
 @click.group()
@@ -42,16 +36,13 @@ def cli(ctx, cache, smoothness, fft, y_offset, threshold):
 @click.pass_context
 def plot(ctx, folder, save_dir):
     """Plot all signals from a run and save them to a specified folder."""
-    # cache, smoothness, fft, y_offset = get_common_options(ctx)
-    save_path = Path(save_dir)
-    validate_dir(save_path)
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
         signals.clean_empty(ctx.obj['min'])
 
-    signals.plot(save_path, fft=ctx.obj['fft'])
-    click.echo(f"Plotted signals to folder: {save_path}")
+    signals.plot(save_dir, fft=ctx.obj['fft'])
+    click.echo(f"Plotted signals to folder: {save_dir}")
 
 # Average Command
 @cli.command()
@@ -61,10 +52,6 @@ def plot(ctx, folder, save_dir):
 @click.pass_context
 def average(ctx, folder, save_dir, method):
     """Analyze the average signal for a run. Only the plot method works with fft."""
-
-    if save_dir != None:
-        save_dir = Path(save_dir)
-        validate_dir(save_dir)
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
@@ -83,15 +70,12 @@ def average(ctx, folder, save_dir, method):
 @cli.command()
 @click.argument('folder_a', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('folder_b', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), required=False, help="Directory to save the comparison plot. Optional.")
+@click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), help="Directory to save the comparison plot. Optional.")
 @click.option('--method', type=click.Choice(['avg-plot', 'avg-area', 'avg-max', 'average', 'correlation'])
               , default='avg-plot', help="Method to compare signals. Default is avg-plot.")
 @click.pass_context
 def compare(ctx, folder_a, folder_b, save_dir, method):
     """Compare the signals of two runs. Only the method avg-plot supports fft."""
-    if save_dir != None:
-        save_dir = Path(save_dir)
-        validate_dir(save_dir)
 
     A = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     B = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
@@ -119,24 +103,31 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
 @cli.command()
 @click.argument('data', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('save-path', type=click.Path(file_okay=True, dir_okay=True))
+@click.option('--method', type=click.Choice(['raw', 'avg']), default='raw', help="Export raw signals or average signals. Default is raw.")
 @click.option('--save-as', type=click.Choice(['single', 'multi']), default='single', help="Export as multiple CSV files or as a single CSV file. Default is single.")
 @click.pass_context
-def export(ctx, data, save_path, save_as):
+def export(ctx, data, save_path, method, save_as):
     """Export the signals of a run to CSV files."""
-
-    save_path = Path(save_path)
 
     signals = voc.Run(data, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
     if ctx.obj['min'] != None:
         signals.clean_empty(ctx.obj['min'])
 
     if save_as == 'multi':
-        validate_dir(save_path)
+        if Path(save_path).is_file():
+            raise click.BadParameter("Save path must be a directory for multi export.")
+        if method == 'avg':
+            raise click.BadParameter("Average signal cannot be exported as multiple files.")
+
         signals.export(save_path, fft=ctx.obj['fft'])
         click.echo(f"Exported signals to folder: {save_path}")
     elif save_as == 'single':
-        signals.export_all(save_path, fft=ctx.obj['fft'])
-        click.echo(f"Exported signals to: {save_path}")
+        if method == 'avg':
+            signals.export_avg(save_path, fft=ctx.obj['fft'])
+            click.echo(f"Exported average signals to: {save_path}")
+        elif method == 'raw':
+            signals.export_all(save_path, fft=ctx.obj['fft'])
+            click.echo(f"Exported signals to: {save_path}")
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
