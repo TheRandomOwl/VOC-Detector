@@ -1,6 +1,6 @@
 [Setup]
 AppName=VOC GUI
-AppVersion=0.4.0
+AppVersion=0.5.1
 DefaultDirName={autopf}\VOC GUI
 DefaultGroupName=VOC GUI
 OutputBaseFilename=VOC GUI Installer

@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.5.0'
+VER = '0.5.1'
 
 class Gui:
     def __init__(self, root):
@@ -23,12 +23,18 @@ class Gui:
             if path.exists():
                 self.cli_path = tk.StringVar(value=str(path))
             else:
-                self.cli_path = tk.StringVar(value="dist\\voc-cli\\voc-cli.exe")
+                path = Path("dist\\voc-cli\\voc-cli.exe")
+                self.cli_path = tk.StringVar(value=path)
+                if not path.exists():
+                    messagebox.showerror("Error", "Could not find the voc-cli executable. Please specify the path manually.")
         else:
             if which("voc-cli"):
                 self.cli_path = tk.StringVar(value=which("voc-cli"))
             else:
-                self.cli_path = tk.StringVar(value="dist/voc-cli")
+                path = Path("dist/voc-cli")
+                self.cli_path = tk.StringVar(value=path)
+                if not path.exists():
+                    messagebox.showerror("Error", "Could not find the voc-cli executable. Please specify the path manually.")
 
         # GUI Elements
         self.cli_path_frame()
