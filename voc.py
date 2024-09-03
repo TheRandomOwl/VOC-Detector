@@ -19,7 +19,7 @@ from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.2.2'
+VER = '4.2.3'
 
 METRIC = {
     '(us)': 1e-6,
@@ -94,9 +94,7 @@ class Signal():
             self.y = np.asarray([float(elm[1])+baseline_shift for elm in data])
 
         #Set a name for the object so that it can be identified
-        self.name = os.path.split(infile)[1]
-        if name != None:
-            self.name = name
+        self.name = str(Path(infile).stem) if name is None else name
 
         # Smooth the signal if specified
         self.smooth(smooth_window)
@@ -123,13 +121,13 @@ class Signal():
             plt.plot(self.x,self.y)
 
         #Create the output folder if it does not already exist
-        if not os.path.isdir(folder):
-            os.mkdir(folder)
+        folder_path = Path(folder)
+        folder_path.mkdir(parents=True, exist_ok=True)
 
-        #Generate the filename by replacing 'txt' with 'png'
+        #Generate the filename
         #and properly converting it into a filepath the computer will understand
-        filename = self.name[0:-3] + 'png'
-        path = os.path.join(folder,filename)
+        filename = self.name + '.png'
+        path = folder_path / filename
 
         #Save the figure and clear the plotting tool's buffer
         plt.savefig(path)
@@ -391,7 +389,7 @@ class Run():
     @staticmethod
     def export_signals(args):
         s, folder, fft = args
-        filepath = Path(folder) / (s.name[:-4] + '.csv')
+        filepath = Path(folder) / (s.name + '.csv')
         s.export(filepath, fft)
         return s
 
