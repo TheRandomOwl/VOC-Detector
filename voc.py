@@ -12,14 +12,13 @@ import csv  # A library for reading and writing csv files
 import matplotlib.pyplot as plt  # A library for generating plots
 import multiprocessing  # A library for parallel processing
 import numpy as np  # A library with useful data storage structures and mathematical operations
-import os  # A library for loading and writing to the filesystem more easily
 from pathlib import Path # A library for handling file paths
 import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.2.3'
+VER = '4.2.4'
 
 METRIC = {
     '(us)': 1e-6,
@@ -252,14 +251,14 @@ class Run():
         self.smoothed = smoothness == 'default' or smoothness > 0
         self.smoothness = smoothness
 
-        self.name = os.path.split(foldername)[1]
-        self.path = str(Path(foldername))
+        self.name = str(Path(foldername).name)
+        self.path = Path(foldername)
         self.y_offset = y_offset
 
         try:
             if cache:
-                print(f"Trying to load cache from {self.path + '.pickle'}")
-                run_cache = load(self.path + '.pickle')
+                print(f"Trying to load cache from {self.path.with_suffix('.pickle')}")
+                run_cache = load(self.path.with_suffix('.pickle'))
             if cache and self.version == run_cache.version and self.path == run_cache.path and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
                 self.signals = run_cache.signals
                 self.units = run_cache.units
@@ -281,7 +280,7 @@ class Run():
 
 
         # Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
-        files = [os.path.join(foldername, filename) for filename in os.listdir(foldername) if filename[0] != '.' and filename[-4:] == '.txt']
+        files = [file for file in Path(foldername).iterdir() if file.suffix == '.txt' and not file.name.startswith('.')]
 
         # Create a pool of worker processes
         with multiprocessing.Pool() as pool:
@@ -305,7 +304,7 @@ class Run():
         try:
             if cache:
                 save(self)
-                print(f"Saved cache to {self.path + '.pickle'}")
+                print(f"Saved cache to {self.path.with_suffix('.pickle')}")
         except:
             print("Unable to save cache")
 
@@ -546,7 +545,7 @@ class Run():
         if filepath == None:
             plt.show()
         else:
-            plt.savefig(os.path.join(filepath, self.name + '_avg_signals.png'))
+            plt.savefig(Path(filepath) / (self.name + '_avg_signals.png'))
 
         plt.clf()
 
@@ -591,7 +590,7 @@ def plot_average_signals(A, B, filepath = None, fft=False):
     if filepath == None:
         plt.show()
     else:
-        plt.savefig(os.path.join(filepath, A.name + '-' + B.name + '_avg_signals.png'))
+        plt.savefig(Path(filepath) / (A.name + '-' + B.name + '_avg.png'))
 
     plt.clf()
 
@@ -643,7 +642,7 @@ def export(filepath, *lists, header=None):
 The following functions are used to save and load run objects to and from the filesystem.
 """
 def save(run):
-    with open(run.path + '.pickle','wb') as f:
+    with open(run.path.with_suffix('.pickle'),'wb') as f:
         pickle.dump(run,f)
     return
 
