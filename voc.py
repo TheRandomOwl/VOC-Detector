@@ -19,7 +19,7 @@ import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 import warnings  # A library for handling warnings
 
-VER = '4.2.7'
+VER = '4.2.8'
 
 METRIC = {
     '(us)': 1e-6,
@@ -507,8 +507,9 @@ class Run():
         Returns:
             float: The average area under the curve.
         """
-        areas = [trapezoid(s.y, s.x) for s in self.signals]
-        return np.mean(areas)
+        x, avg_y = self.avg_signal()
+        area = trapezoid(avg_y, x)
+        return area
 
     def avg_max(self):
         """
@@ -516,8 +517,8 @@ class Run():
         Returns:
             float: The average maximum value.
         """
-        maxes = [s.y.max() for s in self.signals]
-        return np.mean(maxes)
+        _, avg_y = self.avg_signal()
+        return avg_y.max()
 
     def avg_voltage(self):
         """
