@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.8.0'
+VER = '0.8.1'
 API = voc.VER
 
 # Main CLI
@@ -88,14 +88,14 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         if save_dir != None:
             click.echo(f"Saved comparison plot to folder: {save_dir}")
     if method == 'avg-area' or method == 'all':
-        click.echo(f"Area of {A.name}: {A.avg_area()}")
-        click.echo(f"Area of {B.name}: {B.avg_area()}")
+        click.echo(f"Area of {A.name}: {A.avg_area()} {A.units[0]}*{A.units[1]}")
+        click.echo(f"Area of {B.name}: {B.avg_area()} {B.units[0]}*{B.units[1]}")
     if method == 'avg-max' or method == 'all':
-        click.echo(f"Max of {A.name}: {A.avg_max()}")
-        click.echo(f"Max of {B.name}: {B.avg_max()}")
+        click.echo(f"Max of {A.name}: {A.avg_max()} {A.units[1]}")
+        click.echo(f"Max of {B.name}: {B.avg_max()} {B.units[1]}")
     if method == 'average' or method == 'all':
-        click.echo(f"Average voltage of {A.name}: {A.avg_voltage()}")
-        click.echo(f"Average voltage of {B.name}: {B.avg_voltage()}")
+        click.echo(f"Average voltage of {A.name}: {A.avg_voltage()} {A.units[1]}")
+        click.echo(f"Average voltage of {B.name}: {B.avg_voltage()} {B.units[1]}")
     if method == 'correlation' or method == 'all':
         click.echo(f"Correlation coefficient: {voc.corr_coef(A,B)}")
 
