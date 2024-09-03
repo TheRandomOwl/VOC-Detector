@@ -18,7 +18,7 @@ from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.2.4'
+VER = '4.2.5'
 
 METRIC = {
     '(us)': 1e-6,
@@ -111,7 +111,7 @@ class Signal():
             plt.plot(self.xf, np.abs(self.yf))
             plt.title('FFT: ' + self.name)
             plt.xlabel('Frequency (Hz)')
-            plt.ylabel('Magnitude ' + self.units[1])
+            plt.ylabel('Magnitude')
         else:
             plt.ylim(-400 + self.y_offset,-150 + self.y_offset)
             plt.title(self.name)
