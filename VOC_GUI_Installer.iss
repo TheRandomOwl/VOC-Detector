@@ -6,6 +6,8 @@ DefaultGroupName=VOC GUI
 OutputBaseFilename=VOC GUI Installer
 Compression=lzma
 SolidCompression=yes
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 
 [Files]
 Source: "dist\*.*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
