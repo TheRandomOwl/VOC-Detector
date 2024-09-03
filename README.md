@@ -66,6 +66,7 @@
 - `export`   Export the signals of a run to CSV files.
   - **Usage**: `voc-cli.py export [OPTIONS] DATA SAVE_PATH`
   - **Options**:
+    - `--method [raw|avg]`        export raw signals or average signals. Default is raw.
     - `--save-as [single|multi]`  Export as multiple CSV files or as a single CSV file. Default is single.
     - `--help`                    Show this message and exit.
   - **Example**:
