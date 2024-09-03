@@ -17,8 +17,9 @@ import pickle  # A library for saving data in a python-readable format
 from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
+import warnings  # A library for handling warnings
 
-VER = '4.2.6'
+VER = '4.2.7'
 
 METRIC = {
     '(us)': 1e-6,
@@ -41,6 +42,9 @@ def mvavg(x, y, window_size):
     """
     if window_size < 1 or window_size > len(y):
         raise ValueError("Window size must be between 1 and the length of the input array.")
+    
+    if type(window_size) != int:
+        raise TypeError("Window size must be an integer.")
 
     # Calculate moving average
     averages = np.convolve(y, np.ones(window_size)/window_size, mode='valid')
@@ -294,7 +298,7 @@ class Run():
         self.signals = [res for res in results if res is not None]
 
         if len(self.signals) == 0:
-            raise ValueError("No signals could be loaded")
+            raise RuntimeError("No signals could be found.")
 
         # Get units from signals
         self.units = self.signals[0].units
@@ -474,6 +478,8 @@ class Run():
         for signal in self.signals:
             if not signal.is_empty(threshold):
                 new.append(signal)
+        if len(new) == 0:
+            warnings.warn("No signals remain after cleaning, try a lower threshold.")
         self.signals = new
 
     def avg_signal(self, fft = False):
@@ -484,8 +490,6 @@ class Run():
         Returns:
             tuple: Arrays of x-values and average y-values.
         """
-        if len(self.signals) == 0:
-            raise ValueError("No signals to average.")
         # Extract the y or yf arrays
         y_arrays = [s.yf if fft else s.y for s in self.signals]
 
