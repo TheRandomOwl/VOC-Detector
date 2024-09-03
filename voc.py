@@ -19,7 +19,7 @@ from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.2.1'
+VER = '4.2.2'
 
 METRIC = {
     '(us)': 1e-6,
@@ -375,23 +375,24 @@ class Run():
         s.smooth(smoothness)
         return s
 
-    def export(self, folder, fft = False):
+    def export(self, dir, fft = False):
         """
         Export every signal in the run to a specified folder.
         Parameters:
-            folder (str): Directory to save the output files.
+            dir (str): Directory to save the output files.
             fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
         Returns:
             None
         """
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the exporting of signals
-            list(tqdm(pool.imap(self.export_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals", file=sys.stdout))
+            list(tqdm(pool.imap(self.export_signals, [(s, dir, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals", file=sys.stdout))
 
     @staticmethod
     def export_signals(args):
         s, folder, fft = args
-        s.export(os.path.join(folder, s.name[:-4] + '.csv'), fft)
+        filepath = Path(folder) / (s.name[:-4] + '.csv')
+        s.export(filepath, fft)
         return s
 
     # export signals to a single file
@@ -399,7 +400,7 @@ class Run():
         """
         Export all signals in the run to a single file.
         Parameters:
-            filepath (str): The path to the output file.
+            filepath (str): The path to the output file. If a directory is provided, the file will be named after the run.
             fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
             label (bool, optional): If True, include a header with the units of the signals. Default is False.
             show_name (bool, optional): If True, include the name of the signal in the header. Default is False.
@@ -434,11 +435,15 @@ class Run():
         """
         Export the average signal or FFT for the run to a file.
         Parameters:
-            filepath (str): The path to the output file.
+            filepath (str): The path to the output file. If a directory is provided, the file will be named after the run.
             fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
         Returns:
             None
         """
+        filepath = Path(filepath)
+        if filepath.is_dir():
+            filepath = filepath / (self.name + '_avg.csv')
+
         x, avg_y = self.avg_signal(fft)
         if fft:
             export(filepath, x, np.abs(avg_y), header=['(Hz)', 'Units'])
@@ -617,6 +622,10 @@ def export(filepath, *lists, header=None):
     Returns:
         None
     """
+    filepath = Path(filepath, dir_okay=False, file_okay=True)
+    # Create the output directory if it does not already exist
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
     # Find the maximum length of the lists to handle cases where lists have different lengths
     max_length = max(len(lst) for lst in lists)
 
