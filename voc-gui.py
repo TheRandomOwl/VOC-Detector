@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.4.3'
+VER = '0.5.0'
 
 class Gui:
     def __init__(self, root):
@@ -74,8 +74,9 @@ class Gui:
         tk.Button(buttons_frame, text="Compare Runs", command=self.run_compare).grid(row=0, column=2, padx=5, pady=5)
         tk.Button(buttons_frame, text="Export to One CSV", command=lambda: self.run_export(single=True)).grid(row=1, column=0, padx=5, pady=5)
         tk.Button(buttons_frame, text="Export to Multiple CSVs", command=lambda: self.run_export(single=False)).grid(row=1, column=1, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=1, column=2, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/tree/main#voc-gui")).grid(row=2, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Average to CSV", command=lambda: self.run_export(avg=True)).grid(row=1, column=2, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=2, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/tree/main#voc-gui")).grid(row=2, column=1, padx=5, pady=5)
 
     def cli_output(self):
         # Make the Text widget resizable by setting 'fill' to 'both' and 'expand' to True
@@ -143,13 +144,16 @@ class Gui:
             return
         messagebox.showinfo("Info", "Canceled operation.")
 
-    def run_export(self, single=True):
+    def run_export(self, single=True, avg=False):
         folder = filedialog.askdirectory(title="Select Data Folder")
         if folder:
             save_path = filedialog.askdirectory(title="Select Save Directory")
-            if save_path:
+            if save_path and not avg:
                 save_as = "single" if single else "multi"
                 self.run_cli("export", "--save-as", save_as, folder, save_path)
+                return
+            elif save_path and avg:
+                self.run_cli("export", "--method", "avg", folder, save_path)
                 return
         messagebox.showinfo("Info", "Canceled operation.")
 
