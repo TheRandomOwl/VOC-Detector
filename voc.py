@@ -18,7 +18,7 @@ from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.2.5'
+VER = '4.2.6'
 
 METRIC = {
     '(us)': 1e-6,
@@ -75,6 +75,8 @@ class Signal():
         None
         """
 
+        infile = Path(infile)
+
         #Open the specified input file and read all of its lines into a list
         with open(infile) as f:
             reader = csv.reader(f,delimiter='\t')
@@ -93,7 +95,7 @@ class Signal():
             self.y = np.asarray([float(elm[1])+baseline_shift for elm in data])
 
         #Set a name for the object so that it can be identified
-        self.name = str(Path(infile).stem) if name is None else name
+        self.name = str(infile.stem) if name is None else name
 
         # Smooth the signal if specified
         self.smooth(smooth_window)
@@ -251,8 +253,9 @@ class Run():
         self.smoothed = smoothness == 'default' or smoothness > 0
         self.smoothness = smoothness
 
-        self.name = str(Path(foldername).name)
-        self.path = Path(foldername)
+        foldername = Path(foldername)
+        self.name = str(foldername.name)
+        self.path = foldername
         self.y_offset = y_offset
 
         try:
@@ -280,7 +283,7 @@ class Run():
 
 
         # Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
-        files = [file for file in Path(foldername).iterdir() if file.suffix == '.txt' and not file.name.startswith('.')]
+        files = [file for file in foldername.iterdir() if file.suffix == '.txt' and not file.name.startswith('.')]
 
         # Create a pool of worker processes
         with multiprocessing.Pool() as pool:
@@ -619,7 +622,7 @@ def export(filepath, *lists, header=None):
     Returns:
         None
     """
-    filepath = Path(filepath, dir_okay=False, file_okay=True)
+    filepath = Path(filepath)
     # Create the output directory if it does not already exist
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
