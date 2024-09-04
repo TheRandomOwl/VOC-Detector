@@ -90,7 +90,7 @@ class Gui:
         self.output_text = tk.Text(self.root, state="disabled")
         self.output_text.pack(pady=10, fill='both', expand=True)
 
-    def run_cli(self, command, *args):
+    def run_cli(self, command, *args, notify=True):
         """Run CLI command in a separate thread and update the text box in real-time."""
         def run():
             try:
@@ -114,33 +114,40 @@ class Gui:
 
                 self.subprocess = process
 
-                err = False
                 # Continuously read the output
-                for line in process.stdout:
-                    # Check if the process has terminated
-                    if process.poll() is not None:
-                        break
-
-                    self.update_output(line)
+                threading.Thread(target=read_output, args=(process.stdout,)).start()
 
                 # Continuously read the error
-                for line in process.stderr:
-                    err = True
-                    # Check if the process has terminated
-                    if process.poll() is not None:
-                        break
+                threading.Thread(target=read_output, args=(process.stderr,)).start()
 
-                    self.update_output(line)
-
-                if err:
-                    messagebox.showerror("Error", "An error occurred. Please check the output for more information.")
+                # notify when the process is done
+                if notify:
+                    threading.Thread(target=notify_completion).start()
 
             except Exception as e:
                 messagebox.showerror("Internal Error", str(e))
 
+        def read_output(output):
+            try:
+                for line in output:
+                    self.update_output(line)
+            except ValueError:
+                # IO stream is closed
+                pass
+            except Exception as e:
+                messagebox.showerror("Internal Error", str(e))
+
+        def notify_completion():
+            self.subprocess.communicate()
+            if self.subprocess.returncode == 0:
+                messagebox.showinfo("Info", "Command has finished running.")
+            else:
+                messagebox.showerror("Error", "Something went wrong. Check the output for more information.")
+
         # Start the CLI command in a separate thread
         if self.subprocess is None or self.subprocess.poll() is not None:
             threading.Thread(target=run).start()
+
         else:
             response = messagebox.askyesno("Process Running",
                 "Another process is already running. Do you want to cancel the current process and run a new process?")
@@ -196,7 +203,7 @@ class Gui:
         messagebox.showinfo("Info", "Canceled operation.")
 
     def show_version_info(self):
-        self.run_cli("--version")
+        self.run_cli("--version", notify=False)
 
     def select_cli_path(self):
         path = filedialog.askopenfilename(title="Select VOC-CLI Executable")
