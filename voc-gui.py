@@ -7,12 +7,13 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.5.4'
+VER = '0.5.5'
 
 class Gui:
     def __init__(self, root):
         self.root = root
         self.root.title(f"VOC GUI v{VER}")
+        self.subprocess = None
 
         # Allow the window to resize
         self.root.geometry("600x500")  # Set an initial size for the window
@@ -111,15 +112,26 @@ class Gui:
                     creationflags=subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0
                 )
 
+                self.subprocess = process
+
                 err = False
                 # Continuously read the output
                 for line in process.stdout:
+                    # Check if the process has terminated
+                    if process.poll() is not None:
+                        break
+
                     self.update_output(line)
 
                 # Continuously read the error
                 for line in process.stderr:
                     err = True
+                    # Check if the process has terminated
+                    if process.poll() is not None:
+                        break
+
                     self.update_output(line)
+
                 if err:
                     messagebox.showerror("Error", "An error occurred. Please check the output for more information.")
 
@@ -127,7 +139,17 @@ class Gui:
                 messagebox.showerror("Internal Error", str(e))
 
         # Start the CLI command in a separate thread
-        threading.Thread(target=run).start()
+        if self.subprocess is None or self.subprocess.poll() is not None:
+            threading.Thread(target=run).start()
+        else:
+            response = messagebox.askyesno("Process Running",
+                "Another process is already running. Do you want to cancel the current process and run a new process?")
+            if response:
+                self.subprocess.terminate()
+                # Wait for the process to terminate
+                self.subprocess.communicate()
+
+                threading.Thread(target=run).start()
 
     def update_output(self, text):
         """Update the text box with the given text."""
