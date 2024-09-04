@@ -139,10 +139,12 @@ class Gui:
         def read_output(output):
             try:
                 for line in output:
+                    if self.shut_down:
+                        return
                     self.update_output(line)
             except ValueError:
                 # IO stream is closed
-                pass
+                return
             except Exception as e:
                 messagebox.showerror("Internal Error", str(e))
 
