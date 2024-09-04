@@ -4,5 +4,5 @@
 pip install -r requirements.txt
 
 # build programs
-pyinstaller -F --hidden-import=PIL._tkinter_finder voc-gui.py
-pyinstaller -F --hidden-import=PIL._tkinter_finder voc-cli.py
+pyinstaller -F --clean --noconfirm --hidden-import=tkinterk voc-gui.py
+pyinstaller -F --clean --noconfirm --hidden-import=PIL._tkinter_finder voc-cli.py
