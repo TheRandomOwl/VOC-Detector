@@ -14,6 +14,8 @@ class Gui:
         self.root = root
         self.root.title(f"VOC GUI v{VER}")
         self.subprocess = None
+        self.shut_down = False
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         # Allow the window to resize
         self.root.geometry("600x500")  # Set an initial size for the window
@@ -42,6 +44,13 @@ class Gui:
         self.make_options()
         self.make_buttons()
         self.cli_output()
+
+    def close(self):
+        """Handle the window close event."""
+        self.shut_down = True  # Set the flag to indicate that the window is closing
+        if self.subprocess is not None and self.subprocess.poll() is None:  # If process is running
+            self.subprocess.terminate()  # Terminate the subprocess
+        self.root.destroy()  # Destroy the Tkinter root window
 
     def cli_path_frame(self):
         cli_frame = tk.Frame(self.root)
@@ -141,7 +150,7 @@ class Gui:
             self.subprocess.communicate()
             if self.subprocess.returncode == 0:
                 messagebox.showinfo("Info", "Command has finished running.")
-            else:
+            elif not self.shut_down and self.subprocess.returncode != 0:
                 messagebox.showerror("Error", "Something went wrong. Check the output for more information.")
 
         # Start the CLI command in a separate thread
