@@ -9,7 +9,7 @@ A CLI tool to analyze data from Picoscope 7.
 Uses the voc module to analyze data from Picoscope 7 and plot signals.
 """
 
-VER = '0.8.2'
+VER = '0.9.0'
 API = voc.VER
 
 # Main CLI
@@ -48,7 +48,7 @@ def plot(ctx, folder, save_dir):
 @cli.command()
 @click.argument('folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--save-dir', type=click.Path(file_okay=False, dir_okay=True), required=False, help="Directory to save the average plot. Optional.")
-@click.option('--method', type=click.Choice(['plot', 'area', 'max']), default='plot', help="Method to analyze signals. Default is plot.")
+@click.option('--method', type=click.Choice(['plot', 'area', 'max', 'all']), default='plot', help="Method to analyze signals. Default is plot.")
 @click.pass_context
 def average(ctx, folder, save_dir, method):
     """Analyze the average signal for a run. Only the plot method works with fft."""
@@ -57,14 +57,14 @@ def average(ctx, folder, save_dir, method):
     if ctx.obj['min'] != None:
         signals.clean_empty(ctx.obj['min'])
 
-    if method == 'plot':
+    if method == 'area' or method == 'all':
+        click.echo(f"Average area: {signals.avg_area()}")
+    if method == 'max' or method == 'all':
+        click.echo(f"Average max: {signals.avg_max()}")
+    if method == 'plot' or method == 'all':
         signals.plot_average_signal(save_dir, fft=ctx.obj['fft'])
         if save_dir != None:
             click.echo(f"Saved average plot to folder: {save_dir}")
-    elif method == 'area':
-        click.echo(f"Average area: {signals.avg_area()}")
-    elif method == 'max':
-        click.echo(f"Average max: {signals.avg_max()}")
 
 # Compare Command
 @cli.command()
