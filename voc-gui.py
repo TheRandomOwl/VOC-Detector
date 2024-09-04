@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.5.3'
+VER = '0.5.4'
 
 class Gui:
     def __init__(self, root):
@@ -107,7 +107,8 @@ class Gui:
                     stderr=subprocess.PIPE,
                     text=True,
                     bufsize=1,
-                    universal_newlines=True
+                    universal_newlines=True,
+                    creationflags=subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0
                 )
 
                 err = False
