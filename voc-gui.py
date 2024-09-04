@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.5.2'
+VER = '0.5.3'
 
 class Gui:
     def __init__(self, root):
@@ -138,7 +138,7 @@ class Gui:
     def run_average(self):
         folder = filedialog.askdirectory(title="Select Data Folder")
         if folder:
-            self.run_cli("average", folder)
+            self.run_cli("average", "--method", "all", folder)
             return
         messagebox.showinfo("Info", "Canceled operation.")
 
