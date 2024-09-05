@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.5.5'
+VER = '0.6.0'
 
 class Gui:
     def __init__(self, root):
@@ -15,6 +15,7 @@ class Gui:
         self.root.title(f"VOC GUI v{VER}")
         self.subprocess = None
         self.shut_down = False
+        self.canceled = False
         self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         # Allow the window to resize
@@ -52,6 +53,15 @@ class Gui:
             self.subprocess.terminate()  # Terminate the subprocess
         self.root.destroy()  # Destroy the Tkinter root window
 
+    def cancel_process(self):
+        """Cancel the current process."""
+        if self.subprocess is not None and self.subprocess.poll() is None:
+            self.subprocess.terminate()
+            self.canceled = True
+            messagebox.showinfo("Info", "Process has been canceled.")
+        else:
+            messagebox.showinfo("Info", "No process is currently running.")
+
     def cli_path_frame(self):
         cli_frame = tk.Frame(self.root)
         cli_frame.pack(padx=10, pady=10, fill=tk.X)
@@ -85,14 +95,17 @@ class Gui:
         buttons_frame = tk.Frame(self.root)
         buttons_frame.pack(padx=10, pady=10, fill=tk.X)
 
-        tk.Button(buttons_frame, text="Plot Signals", command=self.run_plot).grid(row=0, column=0, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Show Avg Signal", command=self.run_average).grid(row=0, column=1, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Compare Runs", command=self.run_compare).grid(row=0, column=2, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Export to One CSV", command=lambda: self.run_export(single=True)).grid(row=1, column=0, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Export to Multiple CSVs", command=lambda: self.run_export(single=False)).grid(row=1, column=1, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Export Average to CSV", command=lambda: self.run_export(avg=True)).grid(row=1, column=2, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info).grid(row=2, column=0, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/tree/main#voc-gui")).grid(row=2, column=1, padx=5, pady=5)
+        button_width = 17  # Set the width of the buttons
+
+        tk.Button(buttons_frame, text="Plot Signals", command=self.run_plot, width=button_width).grid(row=0, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Show Avg Signal", command=self.run_average, width=button_width).grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Compare Runs", command=self.run_compare, width=button_width).grid(row=0, column=2, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Single CSV", command=lambda: self.run_export(single=True), width=button_width).grid(row=1, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Multiple CSVs", command=lambda: self.run_export(single=False), width=button_width).grid(row=1, column=1, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Average to CSV", command=lambda: self.run_export(avg=True), width=button_width).grid(row=1, column=2, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info, width=button_width).grid(row=2, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Cancel Process", command=self.cancel_process, width=button_width).grid(row=2, column=1, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/tree/main#voc-gui"), width=button_width).grid(row=2, column=2, padx=5, pady=5)
 
     def cli_output(self):
         # Make the Text widget resizable by setting 'fill' to 'both' and 'expand' to True
@@ -149,14 +162,21 @@ class Gui:
                 messagebox.showerror("Internal Error", str(e))
 
         def notify_completion():
-            self.subprocess.communicate()
+            try:
+                # Wait for the process to finish
+                self.subprocess.communicate()
+            except OSError:
+                # Process is terminated
+                return
+
             if self.subprocess.returncode == 0:
                 messagebox.showinfo("Info", "Command has finished running.")
-            elif not self.shut_down and self.subprocess.returncode != 0:
+            elif not self.shut_down and self.subprocess.returncode != 0 and not self.canceled:
                 messagebox.showerror("Error", "Something went wrong. Check the output for more information.")
 
         # Start the CLI command in a separate thread
         if self.subprocess is None or self.subprocess.poll() is not None:
+            self.canceled = False
             threading.Thread(target=run).start()
 
         else:
