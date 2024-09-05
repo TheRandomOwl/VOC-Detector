@@ -142,7 +142,7 @@ class Gui:
                 self.subprocess = process
 
                 # Continuously read the output
-                threading.Thread(target=read_output, args=(process,)).start()
+                threading.Thread(target=read_output, args=(process,), daemon=True).start()
 
                 # notify when the process is done
                 if notify:
