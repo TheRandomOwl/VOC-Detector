@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.2'
+VER = '0.6.3'
 
 class Gui:
     def __init__(self, root):
@@ -171,7 +171,7 @@ class Gui:
 
             if self.subprocess.returncode == 0:
                 messagebox.showinfo("Info", "Command has finished running.")
-            elif not self.shut_down and self.subprocess.returncode != 0:
+            elif not self.shut_down and self.subprocess.returncode > 0:
                 messagebox.showerror("Error", "Something went wrong. Check the output for more information.")
 
         # Start the CLI command in a separate thread
