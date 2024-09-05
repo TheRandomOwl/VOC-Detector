@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.5'
+VER = '0.6.6'
 
 class Gui:
     def __init__(self, root):
@@ -15,6 +15,7 @@ class Gui:
         self.root.title(f"VOC GUI v{VER}")
         self.subprocess = None
         self.shut_down = False
+        self.error = False
         self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         # Allow the window to resize
@@ -119,6 +120,7 @@ class Gui:
     def run_cli(self, command, *args, notify=True):
         """Run CLI command in a separate thread and update the text box in real-time."""
         def run():
+            self.error = False
             try:
                 cli_path = self.cli_path.get()
                 flags = [
@@ -155,6 +157,8 @@ class Gui:
                     for line in process.stdout:
                         self.update_output(line)
                     for line in process.stderr:
+                        # If there is an error, set the error flag to True
+                        self.error = True
                         self.update_output(line)
             except ValueError:
                 # IO stream is closed
@@ -163,16 +167,11 @@ class Gui:
                 messagebox.showerror("Internal Error", str(e))
 
         def notify_completion():
-            try:
-                # Wait for the process to finish
-                self.subprocess.wait()
-            except OSError:
-                # Process is terminated
-                return
+            self.subprocess.wait()
 
-            if self.subprocess.returncode == 0:
+            if self.subprocess.poll() == 0:
                 messagebox.showinfo("Info", "Command has finished running.")
-            elif not self.shut_down and self.subprocess.returncode > 0:
+            elif not self.shut_down and self.subprocess.poll() is not None and self.error:
                 messagebox.showerror("Error", "Something went wrong. Check the output for more information.")
 
         # Start the CLI command in a separate thread
