@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.6'
+VER = '0.6.7'
 
 class Gui:
     def __init__(self, root):
