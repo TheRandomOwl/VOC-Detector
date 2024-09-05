@@ -42,7 +42,7 @@ def mvavg(x, y, window_size):
     """
     if window_size < 1 or window_size > len(y):
         raise ValueError("Window size must be between 1 and the length of the input array.")
-    
+
     if type(window_size) != int:
         raise TypeError("Window size must be an integer.")
 
