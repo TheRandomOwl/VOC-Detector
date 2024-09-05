@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.3'
+VER = '0.6.4'
 
 class Gui:
     def __init__(self, root):
@@ -137,10 +137,7 @@ class Gui:
                 self.subprocess = process
 
                 # Continuously read the output
-                threading.Thread(target=read_output, args=(process.stdout,)).start()
-
-                # Continuously read the error
-                threading.Thread(target=read_output, args=(process.stderr,)).start()
+                threading.Thread(target=read_output, args=(process,)).start()
 
                 # notify when the process is done
                 if notify:
@@ -149,12 +146,13 @@ class Gui:
             except Exception as e:
                 messagebox.showerror("Internal Error", str(e))
 
-        def read_output(output):
+        def read_output(process):
             try:
-                for line in output:
-                    if self.shut_down:
-                        return
-                    self.update_output(line)
+                while process.poll() is None:
+                    for line in process.stdout:
+                        self.update_output(line)
+                    for line in process.stderr:
+                        self.update_output(line)
             except ValueError:
                 # IO stream is closed
                 return
