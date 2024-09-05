@@ -183,10 +183,9 @@ class Gui:
                 self.subprocess.terminate()
                 # Wait for the process to terminate
                 try:
-                    self.subprocess.wait()
-                except OSError:
-                    # Process is terminated
-                    pass
+                    self.subprocess.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    self.subprocess.kill()
 
                 threading.Thread(target=run).start()
 
