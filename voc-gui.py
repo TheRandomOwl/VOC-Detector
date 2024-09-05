@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.4'
+VER = '0.6.5'
 
 class Gui:
     def __init__(self, root):
@@ -162,7 +162,7 @@ class Gui:
         def notify_completion():
             try:
                 # Wait for the process to finish
-                self.subprocess.communicate()
+                self.subprocess.wait()
             except OSError:
                 # Process is terminated
                 return
@@ -183,7 +183,7 @@ class Gui:
                 self.subprocess.terminate()
                 # Wait for the process to terminate
                 try:
-                    self.subprocess.communicate()
+                    self.subprocess.wait()
                 except OSError:
                     # Process is terminated
                     pass
