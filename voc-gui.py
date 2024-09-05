@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.0'
+VER = '0.6.1'
 
 class Gui:
     def __init__(self, root):
@@ -97,15 +97,17 @@ class Gui:
 
         button_width = 17  # Set the width of the buttons
 
-        tk.Button(buttons_frame, text="Plot Signals", command=self.run_plot, width=button_width).grid(row=0, column=0, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Show Avg Signal", command=self.run_average, width=button_width).grid(row=0, column=1, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Compare Runs", command=self.run_compare, width=button_width).grid(row=0, column=2, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Export Single CSV", command=lambda: self.run_export(single=True), width=button_width).grid(row=1, column=0, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Export Multiple CSVs", command=lambda: self.run_export(single=False), width=button_width).grid(row=1, column=1, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Export Average to CSV", command=lambda: self.run_export(avg=True), width=button_width).grid(row=1, column=2, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info, width=button_width).grid(row=2, column=0, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Cancel Process", command=self.cancel_process, width=button_width).grid(row=2, column=1, padx=5, pady=5)
-        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/tree/main#voc-gui"), width=button_width).grid(row=2, column=2, padx=5, pady=5)
+        button_height = 2  # Set the height of the buttons
+
+        tk.Button(buttons_frame, text="Plot Signals", command=self.run_plot, width=button_width, height=button_height).grid(row=0, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Show Avg Signal", command=self.run_average, width=button_width, height=button_height).grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Compare Runs", command=self.run_compare, width=button_width, height=button_height).grid(row=0, column=2, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Single CSV", command=lambda: self.run_export(single=True), width=button_width, height=button_height).grid(row=1, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Multiple CSVs", command=lambda: self.run_export(single=False), width=button_width, height=button_height).grid(row=1, column=1, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Export Average to CSV", command=lambda: self.run_export(avg=True), width=button_width, height=button_height).grid(row=1, column=2, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Show Version Info", command=self.show_version_info, width=button_width, height=button_height).grid(row=2, column=0, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Cancel Process", command=self.cancel_process, width=button_width, height=button_height).grid(row=2, column=1, padx=5, pady=5)
+        tk.Button(buttons_frame, text="Help", command=lambda: webbrowser.open("https://github.com/TheRandomOwl/VOC-Detector/tree/main#voc-gui"), width=button_width, height=button_height).grid(row=2, column=2, padx=5, pady=5)
 
     def cli_output(self):
         # Make the Text widget resizable by setting 'fill' to 'both' and 'expand' to True
