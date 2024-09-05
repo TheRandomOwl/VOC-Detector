@@ -49,7 +49,11 @@ class Gui:
         """Handle the window close event."""
         self.shut_down = True  # Set the flag to indicate that the window is closing
         if self.subprocess is not None and self.subprocess.poll() is None:  # If process is running
-            self.subprocess.terminate()  # Terminate the subprocess
+            try:
+                self.subprocess.terminate()  # Terminate the subprocess
+                self.subprocess.wait(timeout=5)  # Wait for the process to terminate
+            except subprocess.TimeoutExpired:
+                self.subprocess.kill()
         self.root.destroy()  # Destroy the Tkinter root window
 
     def cancel_process(self):
