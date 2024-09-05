@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.1'
+VER = '0.6.2'
 
 class Gui:
     def __init__(self, root):
@@ -15,11 +15,10 @@ class Gui:
         self.root.title(f"VOC GUI v{VER}")
         self.subprocess = None
         self.shut_down = False
-        self.canceled = False
         self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         # Allow the window to resize
-        self.root.geometry("600x500")  # Set an initial size for the window
+        self.root.geometry("600x600")  # Set an initial size for the window
 
         # Automatically set the path to the CLI executable based on the platform
         if platform.system() == "Windows":
@@ -57,7 +56,6 @@ class Gui:
         """Cancel the current process."""
         if self.subprocess is not None and self.subprocess.poll() is None:
             self.subprocess.terminate()
-            self.canceled = True
             messagebox.showinfo("Info", "Process has been canceled.")
         else:
             messagebox.showinfo("Info", "No process is currently running.")
@@ -173,12 +171,11 @@ class Gui:
 
             if self.subprocess.returncode == 0:
                 messagebox.showinfo("Info", "Command has finished running.")
-            elif not self.shut_down and self.subprocess.returncode != 0 and not self.canceled:
+            elif not self.shut_down and self.subprocess.returncode != 0:
                 messagebox.showerror("Error", "Something went wrong. Check the output for more information.")
 
         # Start the CLI command in a separate thread
         if self.subprocess is None or self.subprocess.poll() is not None:
-            self.canceled = False
             threading.Thread(target=run).start()
 
         else:
@@ -187,7 +184,11 @@ class Gui:
             if response:
                 self.subprocess.terminate()
                 # Wait for the process to terminate
-                self.subprocess.communicate()
+                try:
+                    self.subprocess.communicate()
+                except OSError:
+                    # Process is terminated
+                    pass
 
                 threading.Thread(target=run).start()
 
