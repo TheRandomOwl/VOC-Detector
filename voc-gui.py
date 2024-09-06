@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.8'
+VER = '0.6.9'
 
 class Gui:
     def __init__(self, root):
@@ -150,7 +150,7 @@ class Gui:
 
                 # notify when the process is done
                 if notify:
-                    threading.Thread(target=notify_completion).start()
+                    threading.Thread(target=notify_completion, daemon=True).start()
 
             except Exception as e:
                 messagebox.showerror("Internal Error", str(e))
