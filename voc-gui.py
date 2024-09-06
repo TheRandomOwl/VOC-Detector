@@ -189,7 +189,7 @@ class Gui:
                 self.subprocess.terminate()
                 # Wait for the process to terminate
                 try:
-                    self.subprocess.wait(timeout=10)
+                    self.subprocess.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     self.subprocess.kill()
 
