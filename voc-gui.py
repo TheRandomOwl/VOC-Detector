@@ -7,7 +7,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.7'
+VER = '0.6.8'
 
 class Gui:
     def __init__(self, root):
@@ -160,6 +160,8 @@ class Gui:
                 while process.poll() is None:
                     for line in process.stdout:
                         self.update_output(line)
+                        if process.poll() is not None:
+                            break
                     for line in process.stderr:
                         # If there is an error, set the error flag to True
                         self.error = True
