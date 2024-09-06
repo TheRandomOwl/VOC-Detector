@@ -60,7 +60,11 @@ class Gui:
     def cancel_process(self):
         """Cancel the current process."""
         if self.subprocess is not None and self.subprocess.poll() is None:
-            self.subprocess.terminate()
+            try:
+                self.subprocess.terminate()
+                self.subprocess.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.subprocess.kill()
             messagebox.showinfo("Info", "Process has been canceled.")
         else:
             messagebox.showinfo("Info", "No process is currently running.")
