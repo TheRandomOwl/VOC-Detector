@@ -19,7 +19,7 @@ import sys  # A library for interacting with the system
 from tqdm import tqdm  # A library for progress bars
 import warnings  # A library for handling warnings
 
-VER = '4.2.9'
+VER = '4.2.10'
 
 METRIC = {
     '(us)': 1e-6,
@@ -306,6 +306,8 @@ class Run():
         # Smooth the signals
         if self.smoothed:
             self.smooth(smoothness)
+        elif self.smoothness == 0:
+            self.fft()
 
         # Try to save signals to cache
         try:
