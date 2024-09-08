@@ -182,7 +182,7 @@ class Gui:
 
         # Start the CLI command in a separate thread
         if self.subprocess is None or self.subprocess.poll() is not None:
-            threading.Thread(target=run).start()
+            run()
 
         else:
             response = messagebox.askyesno("Process Running",
@@ -195,7 +195,7 @@ class Gui:
                 except subprocess.TimeoutExpired:
                     self.subprocess.kill()
 
-                threading.Thread(target=run).start()
+                run()
 
     def update_output(self, text):
         """Update the text box with the given text."""
