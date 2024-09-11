@@ -37,7 +37,7 @@ import numpy as np  # A library with useful data storage structures and mathemat
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.3.0'
+VER = '4.3.1'
 
 METRIC = {
     '(us)': 1e-6,
@@ -60,6 +60,10 @@ def mvavg(x, y, window_size):
         ValueError: If the window size is less than 1 or greater than the length of the input array.
         TypeError: If the window size is not an integer.
     """
+
+    # Convert input arrays to numpy arrays
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
 
     if window_size == 'default':
         window_size = WINDOW_SIZE
