@@ -1,22 +1,48 @@
-import click
-import voc
-import multiprocessing
-from pathlib import Path
-
 """
 A CLI tool to analyze data from Picoscope 7.
 
-Uses the voc module to analyze data from Picoscope 7 and plot signals.
+This program provides a command-line interface (CLI) for analyzing data from Picoscope 7. It offers several commands to perform different analysis tasks on the data.
+
+Commands:
+- `plot`: Plot all signals from a run and save them to a specified folder.
+- `average`: Analyze the average signal for a run. Supports different analysis methods.
+- `compare`: Compare the signals of two runs. Supports different comparison methods.
+- `export`: Export the signals of a run to CSV files.
+
+Options:
+- `--cache/--no-cache`: Cache the data. Default is to cache.
+- `--smoothness`: Smoothness of the data. Default is 10.
+- `--fft/--no-fft`: Use FFT instead of time-domain signal. Default is no-fft.
+- `--y-offset`: Y-axis offset for the signal. Default is 0.
+- `--threshold`: Minimum peak height for a signal to be included.
+
+Usage:
+python voc-cli.py [command] [options] [arguments]
+
+For more information on each command and its options, use the `--help` flag after the command.
+
+Note: This program requires the `voc` version 4.3.0+ module to be installed.
+
+Author: Nathan Perry
+Supervisor: Dr. Reinhard Schulte
+For: LLU Volatile Organic Compound Detector Siganl Analysis
+Date: September 07 2024
+
 """
 
-VER = '0.9.1'
+import multiprocessing
+from pathlib import Path
+import click
+import voc
+
+VER = '0.9.2'
 API = voc.VER
 
 # Main CLI
 @click.group()
 @click.version_option(version=VER, message=f"%(prog)s, version %(version)s, VOC API version {API}")
 @click.option('--cache/--no-cache', default=True, help="Cache the data. Default is to cache.")
-@click.option('--smoothness', type=click.IntRange(min=0), default=10, help="Smoothness of the data. Default is 10.")
+@click.option('--smoothness', type=click.IntRange(min=0), default=voc.WINDOW_SIZE, help=f"Smoothness of the data. Default is {voc.WINDOW_SIZE}.")
 @click.option('--fft/--no-fft', default=False, help="Use FFT instead of time-domain signal. Default is no-fft.")
 @click.option('--y-offset', type=float, default=0, help="Y-axis offset for the signal. Default is 0.")
 @click.option('--threshold', type=float, help="Minimum peak height for a signal to be included.")
@@ -38,7 +64,7 @@ def plot(ctx, folder, save_dir):
     """Plot all signals from a run and save them to a specified folder."""
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
-    if ctx.obj['min'] != None:
+    if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
     signals.plot(save_dir, fft=ctx.obj['fft'])
@@ -54,18 +80,18 @@ def average(ctx, folder, save_dir, method):
     """Analyze the average signal for a run. Only the plot method works with fft."""
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
-    if ctx.obj['min'] != None:
+    if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
-    if method == 'area' or method == 'all':
+    if method in ['area', 'all']:
         click.echo(f"Area of {signals.name}: {signals.avg_area()} {signals.units[0]}*{signals.units[1]}")
-    if method == 'max' or method == 'all':
+    if method in ['max', 'all']:
         click.echo(f"Max of {signals.name}: {signals.avg_max()} {signals.units[1]}")
-    if method == 'average' or method == 'all':
+    if method in ['average', 'all']:
         click.echo(f"Average voltage of {signals.name}: {signals.avg_voltage()} {signals.units[1]}")
-    if method == 'plot' or method == 'all':
+    if method in ['plot', 'all']:
         signals.plot_average_signal(save_dir, fft=ctx.obj['fft'])
-        if save_dir != None:
+        if save_dir is not None:
             click.echo(f"Saved average plot to folder: {save_dir}")
 
 # Compare Command
@@ -79,26 +105,26 @@ def average(ctx, folder, save_dir, method):
 def compare(ctx, folder_a, folder_b, save_dir, method):
     """Compare the signals of two runs. Only the method avg-plot supports fft."""
 
-    A = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
-    B = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
-    if ctx.obj['min'] != None:
-        A.clean_empty(ctx.obj['min'])
-        B.clean_empty(ctx.obj['min'])
+    run1 = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
+    run2 = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
+    if ctx.obj['min'] is not None:
+        run1.clean_empty(ctx.obj['min'])
+        run2.clean_empty(ctx.obj['min'])
 
-    if method == 'avg-area' or method == 'all':
-        click.echo(f"Area of {A.name}: {A.avg_area()} {A.units[0]}*{A.units[1]}")
-        click.echo(f"Area of {B.name}: {B.avg_area()} {B.units[0]}*{B.units[1]}")
-    if method == 'avg-max' or method == 'all':
-        click.echo(f"Max of {A.name}: {A.avg_max()} {A.units[1]}")
-        click.echo(f"Max of {B.name}: {B.avg_max()} {B.units[1]}")
-    if method == 'average' or method == 'all':
-        click.echo(f"Average voltage of {A.name}: {A.avg_voltage()} {A.units[1]}")
-        click.echo(f"Average voltage of {B.name}: {B.avg_voltage()} {B.units[1]}")
-    if method == 'correlation' or method == 'all':
-        click.echo(f"Correlation coefficient: {voc.corr_coef(A,B)}")
-    if method == 'avg-plot' or method == 'all':
-        voc.plot_average_signals(A, B, save_dir, fft=ctx.obj['fft'])
-        if save_dir != None:
+    if method in ['avg-area', 'all']:
+        click.echo(f"Area of {run1.name}: {run1.avg_area()} {run1.units[0]}*{run1.units[1]}")
+        click.echo(f"Area of {run2.name}: {run2.avg_area()} {run2.units[0]}*{run2.units[1]}")
+    if method in ['avg-max', 'all']:
+        click.echo(f"Max of {run1.name}: {run1.avg_max()} {run1.units[1]}")
+        click.echo(f"Max of {run2.name}: {run2.avg_max()} {run2.units[1]}")
+    if method in ['average', 'all']:
+        click.echo(f"Average voltage of {run1.name}: {run1.avg_voltage()} {run1.units[1]}")
+        click.echo(f"Average voltage of {run2.name}: {run2.avg_voltage()} {run2.units[1]}")
+    if method in ['correlation', 'all']:
+        click.echo(f"Correlation coefficient: {voc.corr_coef(run1,run2)}")
+    if method in ['avg-plot', 'all']:
+        voc.plot_average_signals(run1, run2, save_dir, fft=ctx.obj['fft'])
+        if save_dir is not None:
             click.echo(f"Saved comparison plot to folder: {save_dir}")
 
 # Export Command
@@ -112,7 +138,7 @@ def export(ctx, data, save_path, method, save_as):
     """Export the signals of a run to CSV files."""
 
     signals = voc.Run(data, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'])
-    if ctx.obj['min'] != None:
+    if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
     if save_as == 'multi':
