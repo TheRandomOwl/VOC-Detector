@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.3.3'
+__version__ = '4.3.4'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -313,10 +313,6 @@ class Run():
             if cache and self.version == run_cache.version and self.path == run_cache.path and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
                 self.signals = run_cache.signals
                 self.units = run_cache.units
-                if self.smoothed and not run_cache.smoothed:
-                    self.smooth(smoothness)
-                    _save(self)
-                    print("Saved run to cache")
                 print("Loaded run from cache")
                 return
             if self.version != run_cache.version:
