@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.3.2'
+__version__ = '4.3.3'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -49,7 +49,7 @@ METRIC = {
 
 WINDOW_SIZE = 10
 
-def mvavg(x, y, window_size):
+def _mvavg(x, y, window_size):
     """
     Calculate the moving average of an input array 'y' with a given window size.
     Parameters:
@@ -201,7 +201,7 @@ class Signal():
         if window_size is None:
             window_size = 'default'
 
-        self.x, self.y = mvavg(self.x, self.y, window_size)
+        self.x, self.y = _mvavg(self.x, self.y, window_size)
         self.fft()
 
     def fft(self, units = None):
@@ -263,9 +263,9 @@ class Signal():
             None
         """
         if fft:
-            export(filepath, self.xf, np.abs(self.yf), header=['(Hz)', 'Units'])
+            _export(filepath, self.xf, np.abs(self.yf), header=['(Hz)', 'Units'])
         else:
-            export(filepath, self.x, self.y, header=[self.units[0], self.units[1]])
+            _export(filepath, self.x, self.y, header=[self.units[0], self.units[1]])
 
 class Run():
     """
@@ -307,7 +307,7 @@ class Run():
             if cache:
                 # Try to load the cache
                 print(f"Trying to load cache from {self.path.with_suffix('.pickle')}")
-                run_cache = load(self.path.with_suffix('.pickle'))
+                run_cache = _load(self.path.with_suffix('.pickle'))
 
             # Check if the cache is valid before loading
             if cache and self.version == run_cache.version and self.path == run_cache.path and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
@@ -315,7 +315,7 @@ class Run():
                 self.units = run_cache.units
                 if self.smoothed and not run_cache.smoothed:
                     self.smooth(smoothness)
-                    save(self)
+                    _save(self)
                     print("Saved run to cache")
                 print("Loaded run from cache")
                 return
@@ -356,7 +356,7 @@ class Run():
         # Try to save signals to cache
         try:
             if cache:
-                save(self)
+                _save(self)
                 print(f"Saved cache to {self.path.with_suffix('.pickle')}")
         except Exception as e:
             warnings.warn(f"Unable to save cache: {e}")
@@ -516,7 +516,7 @@ class Run():
                 header.append(f"{s.units[1]} #{i}" if unique else s.units[1])
 
 
-        export(filepath, *data, header=header)
+        _export(filepath, *data, header=header)
 
     def export_avg(self, filepath, fft = False):
         """
@@ -533,9 +533,9 @@ class Run():
 
         x, avg_y = self.avg_signal(fft)
         if fft:
-            export(filepath, x, np.abs(avg_y), header=['(Hz)', 'Units'])
+            _export(filepath, x, np.abs(avg_y), header=['(Hz)', 'Units'])
         else:
-            export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
+            _export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
 
     def fft(self, units = None):
         """
@@ -620,7 +620,7 @@ class Run():
             ytop = None,
             xleft = None,
             xright = None
-            ):
+        ):
         """
         Plot and show the average signal or FFT for the run.
         Parameters:
@@ -708,7 +708,7 @@ def corr_coef(run1, run2):
     _, y2 = run2.avg_signal()
     return np.corrcoef(y1, y2)[0, 1]
 
-def export(filepath, *lists, header = None):
+def _export(filepath, *lists, header = None):
     """
     Export data to a file.
 
@@ -739,7 +739,7 @@ def export(filepath, *lists, header = None):
             row = [lst[i] if i < len(lst) else '' for lst in lists]
             writer.writerow(row)
 
-def save(run):
+def _save(run):
     """
     Save the run object to a pickle file.
 
@@ -752,7 +752,7 @@ def save(run):
     with open(run.path.with_suffix('.pickle'),'wb') as f:
         pickle.dump(run,f)
 
-def load(file):
+def _load(file):
     """
     Load a pickled object from a file.
 
