@@ -24,6 +24,8 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
+__version__ = '4.3.2'
+
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
 import multiprocessing  # A library for parallel processing
@@ -37,7 +39,7 @@ import numpy as np  # A library with useful data storage structures and mathemat
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
 
-VER = '4.3.1'
+VER = __version__
 
 METRIC = {
     '(us)': 1e-6,
