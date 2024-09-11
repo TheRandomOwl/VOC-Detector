@@ -1,25 +1,43 @@
 '''
-Code by: Eli Haynal
+For: LLU Volatile Organic Compound Detector Signal Analysis
+
+This program provides classes and functions for analyzing volatile organic compound (VOC) detector signals. It allows for loading, processing, plotting, and exporting of signal data.
+
+Classes:
+- Signal: Represents a single signal with attributes for units, x-values, y-values, and name. Provides methods for plotting, smoothing, calculating FFT, and exporting the signal.
+- Run: Represents a collection of signals in a run. Provides methods for averaging signals, plotting signals, smoothing signals, and exporting signals.
+
+Functions:
+- mvavg: Calculates the moving average of an input array with a given window size.
+- load: Loads a pickled object from a file.
+- save: Saves a run object to a pickle file.
+- export: Exports data to a file.
+- plot_average_signals: Plots the average signal or FFT for two runs.
+- corr_coef: Calculates the similarity between two runs.
+
+Based on code by: Eli Haynal
 Supervisor: Dr. Reinhard Schulte
 For: LLU Volatile Organic Compound Detector Siganl Analysis
 Version: 10:50 am 6/23/2023
 
 Modified by: Nathan Perry and Nathan Fisher
+
 '''
 
-#These statements import the libraries needed for the code to run
+# These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
-import matplotlib.pyplot as plt  # A library for generating plots
 import multiprocessing  # A library for parallel processing
-import numpy as np  # A library with useful data storage structures and mathematical operations
-from pathlib import Path # A library for handling file paths
+from pathlib import Path  # A library for handling file paths
 import pickle  # A library for saving data in a python-readable format
-from scipy.integrate import trapezoid  # A library for numerical integration
 import sys  # A library for interacting with the system
-from tqdm import tqdm  # A library for progress bars
 import warnings  # A library for handling warnings
 
-VER = '4.2.10'
+import matplotlib.pyplot as plt  # A library for generating plots
+import numpy as np  # A library with useful data storage structures and mathematical operations
+from scipy.integrate import trapezoid  # A library for numerical integration
+from tqdm import tqdm  # A library for progress bars
+
+VER = '4.3.0'
 
 METRIC = {
     '(us)': 1e-6,
@@ -27,53 +45,60 @@ METRIC = {
     '(s)': 1
 }
 
+WINDOW_SIZE = 10
+
 def mvavg(x, y, window_size):
     """
     Calculate the moving average of an input array 'y' with a given window size.
     Parameters:
         x (array-like): The input array of x-values.
         y (array-like): The input array of y-values.
-        window_size (int): The size of the moving average window.
+        window_size (int): The size of the moving average window. use 'default' for default window size.
     Returns:
-        aligned_x (ndarray): The x-values aligned with the moving average.
-        averages (ndarray): The calculated moving averages.
+        tuple: A tuple containing the aligned x-values and the moving average.
     Raises:
         ValueError: If the window size is less than 1 or greater than the length of the input array.
+        TypeError: If the window size is not an integer.
     """
+
+    if window_size == 'default':
+        window_size = WINDOW_SIZE
+
+    if type(window_size) is not int:
+        raise TypeError("Window size must be an integer.")
+
     if window_size < 1 or window_size > len(y):
         raise ValueError("Window size must be between 1 and the length of the input array.")
-
-    if type(window_size) != int:
-        raise TypeError("Window size must be an integer.")
 
     # Calculate moving average
     averages = np.convolve(y, np.ones(window_size)/window_size, mode='valid')
 
-    # Align x with the moving average
+    # Align x array with the moving average
     start_index = window_size - 1
-    aligned_x = np.asarray(x[start_index: start_index + len(averages)])
+    aligned_x = np.asarray(x[start_index : start_index+len(averages)])
     aligned_x -= (aligned_x[0] - x[0]) / 2
 
     return aligned_x, averages
 
 class Signal():
     """
-    Class representing a signal.
+    Class representing a signal (one file).
     Attributes:
-        units (list): List of units of the signal.
+        units (list): List of units of the signal. Index 0 is the x-axis unit, index 1 is the y-axis unit.
         x (ndarray): Array of x values for the signal.
         y (ndarray): Array of y values for the signal.
         name (str): Name of the signal.
+        xf (ndarray): Array of x values for the FFT of the signal.
+        yf (ndarray): Array of y values for the FFT of the signal.
     """
 
-    #The function initiating each class instance from a specified .txt file
-    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window=0):
+    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window = 0):
         """
         Initializes an instance of the Signal class.
         Parameters:
             infile (str): The path to the input file.
             name (str, optional): The name of the object. If not provided, the name will be extracted from the input file path.
-            baseline_shift (float, optional): The amount to shift the y values of the signal. Default is 0.
+            baseline_shift (float, optional): The amount to add to the y values of the signal. Default is 0.
             smooth_window (int, optional): The size of the window for smoothing the signal. Default is 0 (no smoothing).
         Returns:
         None
@@ -81,30 +106,37 @@ class Signal():
 
         infile = Path(infile)
 
-        #Open the specified input file and read all of its lines into a list
+        # Open the specified input file and read all of its lines into a list
         with open(infile) as f:
             reader = csv.reader(f,delimiter='\t')
-            data = [row for row in reader]
+            data = list(reader)
 
-            #Extract the units of the signal from the header
+            # Extract the units of the signal from the header
             self.units = tuple(data[1])
 
-            #Eliminate the three header lines
+            # Eliminate the three header lines
             data = data[3:]
 
-            #Create a list of the x values for the signal
+            # Create a numpy array of the x values for the signal
             self.x = np.asarray([float(elm[0]) for elm in data])
 
-            #Create a list of y values for the signal, moving them to zero the signal
+            # Create a numpy array of y values for the signal and add baseline shift
             self.y = np.asarray([float(elm[1])+baseline_shift for elm in data])
 
-        #Set a name for the object so that it can be identified
+        # Set a name for the object so that it can be identified
         self.name = str(infile.stem) if name is None else name
 
         # Smooth the signal if specified
         self.smooth(smooth_window)
 
         self.y_offset = baseline_shift
+
+        # Create placeholders for the FFT results
+        self.xf = np.array([])
+        self.yf = np.array([])
+
+    def __repr__(self):
+        return self.name
 
     def plot(self,folder,fft = False):
         """
@@ -125,16 +157,15 @@ class Signal():
             plt.ylabel('Amplitude ' + self.units[1])
             plt.plot(self.x,self.y)
 
-        #Create the output folder if it does not already exist
+        # Create the output folder if it does not already exist
         folder_path = Path(folder)
         folder_path.mkdir(parents=True, exist_ok=True)
 
-        #Generate the filename
-        #and properly converting it into a filepath the computer will understand
+        # Generate the filename and convert it into a filepath
         filename = self.name + '.png'
         path = folder_path / filename
 
-        #Save the figure and clear the plotting tool's buffer
+        # Save the figure and clear the plotting tool's buffer
         plt.savefig(path)
         plt.clf()
 
@@ -152,27 +183,27 @@ class Signal():
 
     def smooth(self, window_size = None):
         """
-        Smooth the signal using a moving average and recalculate FFT and signal statistics.
+        Smooth the signal using a moving average
         Parameters:
-            window_size (int, optional): Window size for smoothing. Default is 10.
+            window_size (int, optional): Window size for smoothing. Default is the value of WINDOW_SIZE.
         Returns:
             None
         """
         if window_size == 0:
             return
-        elif window_size == None:
-            window_size = 10
+
+        if window_size is None:
+            window_size = 'default'
 
         self.x, self.y = mvavg(self.x, self.y, window_size)
         self.fft()
 
-    #Calculate the Fast-Fourier transform of the signal
-    def fft(self, metric_prefix = None):
+    def fft(self, units = None):
         """
-        Calculate the Fast-Fourier transform of the signal.
+        Calculate the Fast-Fourier transform of the signal. Use np.abs() on yf to get magnitude.
         Parameters:
-            metric_prefix (optional): The units of the time axis of the signal,
-            such as "(um)", "(ms)" or "(s)". Default is the value of self.units[0].
+            units (optional): The units of the time axis of the signal,
+            such as "(us)", "(ms)" or "(s)". Default is the value of self.units[0].
         Returns:
             None
         """
@@ -180,20 +211,20 @@ class Signal():
         y = self.y - np.mean(self.y)
 
         # Convert signal time axis to seconds
-        if metric_prefix == None:
+        if units is None:
             x = np.asarray(self.x) * METRIC[self.units[0]]
         else:
-            x = np.asarray(self.x) * metric_prefix
+            x = np.asarray(self.x) * units
 
         # Sample spacing
         dt = np.mean(np.diff(x))
         n = len(x)
 
+        # Perform the FFT. yf is a complex number array
         self.yf = np.fft.rfft(y)
         self.xf = np.fft.rfftfreq(n, dt)
 
-    # Plot the magnitude of the FFT results
-    def show_signal(self, fft=False):
+    def show_signal(self, fft = False):
         """
         Show a graph of the signal.
         Parameters:
@@ -201,7 +232,7 @@ class Signal():
         Returns:
             None
         """
-        # Plot the frequency vs. magnitude
+        # Plot the frequency vs. magnitude or time vs. amplitude
         plt.plot(self.xf if fft else self.x, np.abs(self.yf) if fft else self.y)
 
         # Label the axes
@@ -213,6 +244,9 @@ class Signal():
 
         # Display the plot
         plt.show()
+
+        # Clear the plot
+        plt.clf()
 
     def export(self, filepath, fft = False):
         """
@@ -229,9 +263,9 @@ class Signal():
 
 class Run():
     """
-    Class representing a run of signals.
+    Class representing a run of signals (all files).
     Attributes:
-        name (str): Name of the run.
+        name (str): Name of the run folder.
         signals (list): List of signal objects in the run.
         smoothed (bool): True if the signals are smoothed, False otherwise.
         smoothness (int): The size of the window for smoothing the signals.
@@ -251,6 +285,7 @@ class Run():
 
         """
 
+        # Set the version of the program
         self.version = VER
 
         # True if signals are smoothed
@@ -264,8 +299,11 @@ class Run():
 
         try:
             if cache:
+                # Try to load the cache
                 print(f"Trying to load cache from {self.path.with_suffix('.pickle')}")
                 run_cache = load(self.path.with_suffix('.pickle'))
+
+            # Check if the cache is valid before loading
             if cache and self.version == run_cache.version and self.path == run_cache.path and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
                 self.signals = run_cache.signals
                 self.units = run_cache.units
@@ -275,15 +313,15 @@ class Run():
                     print("Saved run to cache")
                 print("Loaded run from cache")
                 return
-            elif self.version != run_cache.version:
+            if self.version != run_cache.version:
                 print(f"Cache version mismatch. Expected {self.version}, got {run_cache.version}")
         except FileNotFoundError:
             print("Cache not found")
         except UnboundLocalError:
             # Ignore if run_cache is not defined due to cache being False
             pass
-        except:
-            print("Unable to load cache")
+        except Exception as e:
+            warnings.warn(f"Unable to load cache: {e}")
 
 
         # Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
@@ -314,11 +352,20 @@ class Run():
             if cache:
                 save(self)
                 print(f"Saved cache to {self.path.with_suffix('.pickle')}")
-        except:
-            print("Unable to save cache")
+        except Exception as e:
+            warnings.warn(f"Unable to save cache: {e}")
 
     @staticmethod
     def load_signal(args):
+        """
+        Load a signal from a file.
+
+        Parameters:
+        - args (tuple): A tuple containing the file object `f` and the baseline shift `offset`.
+
+        Returns:
+        - Signal or None: The loaded signal if successful, or None if an error occurred.
+        """
         f, offset = args
         try:
             return Signal(f, baseline_shift=offset)
@@ -337,10 +384,9 @@ class Run():
         """
         return self.signals[index]
 
-    #A function defining how a run object is represented when printed
-    #to the command line, etc. Increases readability.
+    # A function defining how a run object is represented when printed.
     def __repr__(self):
-        return(self.name)
+        return self.name
 
     def plot(self,folder,fft = False):
         """
@@ -357,19 +403,27 @@ class Run():
 
     @staticmethod
     def plot_signals(args):
+        """
+        Plot signals.
+
+        Args:
+            args (tuple): A tuple containing the following elements:
+            - s: The signal object.
+            - folder: The folder path where the plot will be saved.
+            - plot_fft (bool): Whether to plot the FFT of the signal or not.
+        """
         s, folder, plot_fft = args
         s.plot(folder, fft=plot_fft)
 
     def smooth(self, smoothness = None):
         """
-        Smooth each signal in the run with a 10-point moving average.
+        Smooth each signal in the run with a moving average.
         Parameters:
             smoothness (int, optional): The size of the window for smoothing the signals. Default is None.
         Returns:
             None
         """
-        if smoothness == 'default':
-            smoothness = None
+
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the smoothing of signals and us tqdm to show progress
             self.signals = list(tqdm(pool.imap(self.smooth_signals, [(s, smoothness) for s in self.signals]),
@@ -377,31 +431,52 @@ class Run():
 
     @staticmethod
     def smooth_signals(args):
+        """
+        Smooths the given signals.
+
+        Args:
+            args (tuple): A tuple containing the signal object and the smoothness value.
+
+        Returns:
+            Signal: The smoothed signal object.
+        """
         s, smoothness = args
         s.smooth(smoothness)
         return s
 
-    def export(self, dir, fft = False):
+    def export(self, directory, fft = False):
         """
         Export every signal in the run to a specified folder.
         Parameters:
-            dir (str): Directory to save the output files.
+            directory (str): Directory to save the output files.
             fft (bool, optional): Export FFT if True, time-domain signal if False. Default is False.
         Returns:
             None
         """
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the exporting of signals
-            list(tqdm(pool.imap(self.export_signals, [(s, dir, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals", file=sys.stdout))
+            list(tqdm(pool.imap(self.export_signals, [(s, directory, fft) for s in self.signals]), total=len(self.signals), desc="Exporting signals", file=sys.stdout))
 
     @staticmethod
     def export_signals(args):
+        """
+        Export signals to a CSV file.
+
+        Args:
+            args (tuple): A tuple containing the following parameters:
+                - s (Signal): The signal to export.
+                - folder (str): The folder path where the CSV file will be saved.
+                - fft (bool): Flag indicating whether to apply FFT before exporting.
+
+        Returns:
+            Signal: The exported signal.
+
+        """
         s, folder, fft = args
         filepath = Path(folder) / (s.name + '.csv')
         s.export(filepath, fft)
         return s
 
-    # export signals to a single file
     def export_all(self, filepath, fft = False, unique = True):
         """
         Export all signals in the run to a single file.
@@ -456,17 +531,17 @@ class Run():
         else:
             export(filepath, x, avg_y, header=[self.units[0], self.units[1]])
 
-    def fft(self, metric_prefix = None):
+    def fft(self, units = None):
         """
         Calculate the FFT for every signal in the run.
         Parameters:
-            metric_prefix (optional): The units of the time axis of the signal,
+            units (optional): The units of the time axis of the signal,
             such as "(um)", "(ms)" or "(s)" . Default is the value of self.units[0].
         Returns:
             None
         """
         for s in self.signals:
-            s.fft(metric_prefix)
+            s.fft(units)
 
     def clean_empty(self, threshold):
         """
@@ -531,7 +606,15 @@ class Run():
         _, voltage = self.avg_signal()
         return np.mean(voltage)
 
-    def plot_average_signal(self, filepath = None, fft=False, ybottom=None, ytop=None, xleft=None, xright=None):
+    def plot_average_signal(
+            self,
+            filepath = None,
+            fft = False,
+            ybottom = None,
+            ytop = None,
+            xleft = None,
+            xright = None
+            ):
         """
         Plot and show the average signal or FFT for the run.
         Parameters:
@@ -552,72 +635,74 @@ class Run():
         plt.ylim(bottom=ybottom, top=ytop)
         plt.xlim(left=xleft, right=xright)
 
-        if filepath == None:
+        if filepath is None:
             plt.show()
         else:
             plt.savefig(Path(filepath) / (self.name + '_avg_signals.png'))
 
+        # Clear the plot
         plt.clf()
 
-def plot_average_signals(A, B, filepath = None, fft=False):
+def plot_average_signals(run1, run2, filepath = None, fft = False):
     """
     Plot the average signal or FFT for two runs. Useful for subjectively identifying
-    typical signal differences between two treatments.
+    typical signal differences between two treatments. If filepath is provided,
+    the plot will be saved to a file else, the plot will be displayed.
     Parameters:
-        A (run): The first run.
-        B (run): The second run.
-        filepath (str): The directory to save the plot image.
+        run1 (run): The first run.
+        run2 (run): The second run.
+        filepath (str, optional): Directory to save the plot image. Default is None.
         fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
         show (bool, optional): If True, display the plot. If False, save the plot. Default is False.
     Returns:
         None
     """
-    A_x, A_y = A.avg_signal(fft)
+    x1, y1 = run1.avg_signal(fft)
 
-    B_x, B_y = B.avg_signal(fft)
+    x2, y2 = run2.avg_signal(fft)
 
     #Clear the plotting tool
     plt.clf()
 
-    #Plot both average signals over time
+    # Plot both average signals
     if fft:
-        plt.plot(A_x, np.abs(A_y),label=A.name)
-        plt.plot(B_x, np.abs(B_y),label=B.name)
+        plt.plot(x1, np.abs(y1),label=run1.name)
+        plt.plot(x2, np.abs(y2),label=run2.name)
     else:
-        plt.plot(A_x,A_y,'o',markersize=3,label=A.name)
-        plt.plot(B_x,B_y,'o',markersize=3,label=B.name)
+        plt.plot(x1,y1,'o',markersize=3,label=run1.name)
+        plt.plot(x2,y2,'o',markersize=3,label=run2.name)
 
-    #Add a title and axis labels to the plot
+    # Add a title and axis labels to the plot
     plt.title('Average signals')
-    plt.xlabel('Frequency (Hz)' if fft else 'Time ' + A.units[0])
-    plt.ylabel('Magnitude' if fft else 'Amplitude ' + A.units[1])
+    plt.xlabel('Frequency (Hz)' if fft else 'Time ' + run1.units[0])
+    plt.ylabel('Magnitude' if fft else 'Amplitude ' + run1.units[1])
 
-    #Add a legend to the plot
+    # Add a legend to the plot
     plt.legend()
 
-    #Save the plot at the specified location with an auto-generated name
-    #and clear the plotting tool
-    if filepath == None:
+    # Save the plot at the specified location with an auto-generated name
+    if filepath is None:
         plt.show()
     else:
-        plt.savefig(Path(filepath) / (A.name + '-' + B.name + '_avg.png'))
+        plt.savefig(Path(filepath) / (run1.name + '-' + run2.name + '_avg.png'))
 
+    # Clear the plot
     plt.clf()
 
-def corr_coef(A, B):
+def corr_coef(run1, run2):
     """
     Calculate the similarity between two runs.
     Parameters:
-        A (run): The first run.
-        B (run): The second run.
+        run1 (run): The first run.
+        run2 (run): The second run.
     Returns:
-        float: The similarity between the two runs.
+        float: The correlation coefficent between the two runs.
     """
-    _, A_y = A.avg_signal()
-    _, B_y = B.avg_signal()
-    return np.corrcoef(A_y, B_y)[0, 1]
+    _, y1 = run1.avg_signal()
+    _, y2 = run2.avg_signal()
+    return np.corrcoef(y1, y2)[0, 1]
 
-def export(filepath, *lists, header=None):
+def export(filepath, *lists, header = None):
     """
     Export data to a file.
 
@@ -640,7 +725,7 @@ def export(filepath, *lists, header=None):
         writer = csv.writer(file)
 
         # Write the header if provided
-        if header != None:
+        if header is not None:
             writer.writerow(header)
 
         # Write the lists row by row
@@ -648,15 +733,32 @@ def export(filepath, *lists, header=None):
             row = [lst[i] if i < len(lst) else '' for lst in lists]
             writer.writerow(row)
 
-"""
-The following functions are used to save and load run objects to and from the filesystem.
-"""
 def save(run):
+    """
+    Save the run object to a pickle file.
+
+    Parameters:
+    run (object): The run object to be saved.
+
+    Returns:
+    None
+    """
     with open(run.path.with_suffix('.pickle'),'wb') as f:
         pickle.dump(run,f)
-    return
 
 def load(file):
+    """
+    Load a pickled object from a file.
+
+    Parameters:
+    file (str): The path to the file containing the pickled object.
+
+    Returns:
+    object: The unpickled object.
+
+    Raises:
+    FileNotFoundError: If the file does not exist.
+    """
     with open(file,'rb') as f:
         return pickle.load(f)
 
