@@ -1,4 +1,4 @@
-#define MyAppVersion "0.5.2"
+#define MyAppVersion "0.6.11"
 
 [Setup]
 AppName=VOC GUI
