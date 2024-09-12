@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.3.5'
+__version__ = '4.3.6'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -341,7 +341,7 @@ class Run():
             raise RuntimeError("No signals could be found. Make sure the files exist and are in the correct format.")
 
         # Get units from signals
-        self.units = self.signals[0].units
+        self.units = self.get(0).units
 
         # Smooth the signals
         if self.smoothed:
