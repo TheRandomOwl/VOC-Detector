@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.3.4'
+__version__ = '4.3.5'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -338,7 +338,7 @@ class Run():
         self.signals = [res for res in results if res is not None]
 
         if len(self.signals) == 0:
-            raise RuntimeError("No signals could be found.")
+            raise RuntimeError("No signals could be found. Make sure the files exist and are in the correct format.")
 
         # Get units from signals
         self.units = self.signals[0].units
