@@ -35,7 +35,7 @@ from pathlib import Path
 import click
 import voc
 
-VER = '0.11.0'
+VER = '1.0.0'
 API = voc.VER
 
 # Main CLI
@@ -60,15 +60,17 @@ def cli(ctx, cache, smoothness, fft, y_offset, threshold, normalize):
 @cli.command()
 @click.argument('folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('save-dir', type=click.Path(file_okay=False, dir_okay=True))
+@click.option('--top', type=float, help="Top limit for the plot. Optional.")
+@click.option('--bottom', type=float, help="Bottom limit for the plot. Optional.")
 @click.pass_context
-def plot(ctx, folder, save_dir):
+def plot(ctx, folder, save_dir, top, bottom):
     """Plot all signals from a run and save them to a specified folder."""
 
     signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
     if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
-    signals.plot(save_dir, fft=ctx.obj['fft'])
+    signals.plot(save_dir, fft=ctx.obj['fft'], ymin=bottom, ymax=top)
     click.echo(f"Plotted signals to folder: {save_dir}")
 
 # Average Command
