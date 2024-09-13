@@ -21,7 +21,7 @@ python voc-cli.py [command] [options] [arguments]
 
 For more information on each command and its options, use the `--help` flag after the command.
 
-Note: This program requires the `voc` version 4.4.0+ module to be installed.
+Note: This program requires the `voc` version 4.5.0+ module to be installed.
 
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
@@ -35,7 +35,7 @@ from pathlib import Path
 import click
 import voc
 
-VER = '0.10.0'
+VER = '0.11.0'
 API = voc.VER
 
 # Main CLI
@@ -46,12 +46,13 @@ API = voc.VER
 @click.option('--fft/--no-fft', default=False, help="Use FFT instead of time-domain signal. Default is no-fft.")
 @click.option('--y-offset', type=float, default=0, help="Y-axis offset for the signal. Default is 0.")
 @click.option('--threshold', type=float, help="Minimum peak height for a signal to be included.")
+@click.option('--normalize/--no-normalize', default=False, help="Normalize the signals to start at zero seconds. Default is no-normalize.")
 @click.pass_context
-def cli(ctx, cache, smoothness, fft, y_offset, threshold):
+def cli(ctx, cache, smoothness, fft, y_offset, threshold, normalize):
     """A CLI tool to analyze data from Picoscope 7."""
     # Store options in context
     ctx.ensure_object(dict)
-    ctx.obj.update(cache=cache, smoothness=smoothness, fft=fft, y_offset=y_offset, min=threshold)
+    ctx.obj.update(cache=cache, smoothness=smoothness, fft=fft, y_offset=y_offset, min=threshold, norm=normalize)
 
 # CLI Commands
 
@@ -63,7 +64,7 @@ def cli(ctx, cache, smoothness, fft, y_offset, threshold):
 def plot(ctx, folder, save_dir):
     """Plot all signals from a run and save them to a specified folder."""
 
-    signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'])
+    signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
     if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
@@ -79,7 +80,7 @@ def plot(ctx, folder, save_dir):
 def average(ctx, folder, save_dir, method):
     """Analyze the average signal for a run. Only the plot method works with fft."""
 
-    signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'])
+    signals = voc.Run(folder, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
     if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
@@ -105,8 +106,8 @@ def average(ctx, folder, save_dir, method):
 def compare(ctx, folder_a, folder_b, save_dir, method):
     """Compare the signals of two runs. Only the method avg-plot supports fft."""
 
-    run1 = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'])
-    run2 = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'])
+    run1 = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
+    run2 = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
     if ctx.obj['min'] is not None:
         run1.clean_empty(ctx.obj['min'])
         run2.clean_empty(ctx.obj['min'])
@@ -137,7 +138,7 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
 def export(ctx, data, save_path, method, save_as):
     """Export the signals of a run to CSV files."""
 
-    signals = voc.Run(data, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'])
+    signals = voc.Run(data, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
     if ctx.obj['min'] is not None:
         signals.clean_empty(ctx.obj['min'])
 
