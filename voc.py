@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.3.6'
+__version__ = '4.4.0'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -98,7 +98,7 @@ class Signal():
         yf (ndarray): Array of y values for the FFT of the signal.
     """
 
-    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window = 0):
+    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window = 0, fft = False):
         """
         Initializes an instance of the Signal class.
         Parameters:
@@ -106,6 +106,7 @@ class Signal():
             name (str, optional): The name of the object. If not provided, the name will be extracted from the input file path.
             baseline_shift (float, optional): The amount to add to the y values of the signal. Default is 0.
             smooth_window (int, optional): The size of the window for smoothing the signal. Default is 0 (no smoothing).
+            fft (bool, optional): Perform FFT on the signal if True. Default is False.
         Returns:
         None
         """
@@ -140,6 +141,9 @@ class Signal():
         # Create placeholders for the FFT results
         self.xf = np.array([])
         self.yf = np.array([])
+
+        if fft:
+            self.fft()
 
     def __repr__(self):
         return self.name
@@ -202,7 +206,6 @@ class Signal():
             window_size = 'default'
 
         self.x, self.y = _mvavg(self.x, self.y, window_size)
-        self.fft()
 
     def fft(self, units = None):
         """
@@ -278,7 +281,7 @@ class Run():
         units (list): List of units of the signals in the run.
     """
 
-    def __init__(self, foldername, y_offset = 0, cache = True, smoothness = 'default'):
+    def __init__(self, foldername, y_offset = 0, cache = True, smoothness = 'default', fft = True):
         """
         Initialize a run instance from a specified folder of .txt files.
         Parameters:
@@ -286,6 +289,7 @@ class Run():
             y_offset (float, optional): The amount to shift the y values of the signals. Default is 0.
             cache (bool, optional): If True, save the run object to cache. Default is True.
             smoothness (int, optional): The size of the window for smoothing the signals. Default is 'default'.
+            fft (bool, optional): Perform FFT on the signals. Default is True.
         Returns:
             None
 
@@ -303,6 +307,11 @@ class Run():
         self.path = foldername
         self.y_offset = y_offset
 
+        if fft:
+            self.fft_check = True
+        else:
+            self.fft_check = False
+
         try:
             if cache:
                 # Try to load the cache
@@ -310,7 +319,7 @@ class Run():
                 run_cache = _load(self.path.with_suffix('.pickle'))
 
             # Check if the cache is valid before loading
-            if cache and self.version == run_cache.version and self.path == run_cache.path and self.smoothness == run_cache.smoothness and self.y_offset == run_cache.y_offset:
+            if cache and self.__validate(run_cache):
                 self.signals = run_cache.signals
                 self.units = run_cache.units
                 print("Loaded run from cache")
@@ -332,7 +341,7 @@ class Run():
         # Create a pool of worker processes
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the loading of signals
-            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset) for f in files]), total=len(files), desc="Loading files", file=sys.stdout))
+            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset, fft, smoothness) for f in files]), total=len(files), desc="Loading files", file=sys.stdout))
 
         # Filter out any None results (in case of errors)
         self.signals = [res for res in results if res is not None]
@@ -343,11 +352,6 @@ class Run():
         # Get units from signals
         self.units = self.get(0).units
 
-        # Smooth the signals
-        if self.smoothed:
-            self.smooth(smoothness)
-        elif self.smoothness == 0:
-            self.fft()
 
         # Try to save signals to cache
         try:
@@ -363,16 +367,32 @@ class Run():
         Load a signal from a file.
 
         Parameters:
-        - args (tuple): A tuple containing the file object `f` and the baseline shift `offset`.
+        - args (tuple): A tuple containing the file object `f`, the baseline shift `offset`, and fft.
 
         Returns:
         - Signal or None: The loaded signal if successful, or None if an error occurred.
         """
-        f, offset = args
+        f, offset, fft, smoothness = args
         try:
-            return Signal(f, baseline_shift=offset)
+            return Signal(f, baseline_shift=offset, fft=fft, smooth_window=smoothness)
         except ValueError:
             return None
+
+    def __validate(self, cache):
+        """
+        Validate the cache object.
+
+        Parameters:
+            run_cache (Run): The cached run object.
+
+        Returns:
+            bool: True if the cache is valid, False otherwise.
+        """
+        return (self.version == cache.version
+                and self.path == cache.path
+                and self.smoothness == cache.smoothness
+                and self.y_offset == cache.y_offset
+                and self.fft_check == cache.fft_check)
 
     def get(self, index):
         """
