@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.4.0'
+__version__ = '4.5.0'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -98,7 +98,7 @@ class Signal():
         yf (ndarray): Array of y values for the FFT of the signal.
     """
 
-    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window = 0, fft = False):
+    def __init__(self, infile, name = None, baseline_shift = 0, smooth_window = 0, fft = False, normalize = False):
         """
         Initializes an instance of the Signal class.
         Parameters:
@@ -107,6 +107,7 @@ class Signal():
             baseline_shift (float, optional): The amount to add to the y values of the signal. Default is 0.
             smooth_window (int, optional): The size of the window for smoothing the signal. Default is 0 (no smoothing).
             fft (bool, optional): Perform FFT on the signal if True. Default is False.
+            normalize (bool, optional): Normalize the x-axis values of the signal to start at zero if True. Default is False.
         Returns:
         None
         """
@@ -145,8 +146,19 @@ class Signal():
         if fft:
             self.fft()
 
+        if normalize:
+            self.normalize_x()
+
     def __repr__(self):
         return self.name
+
+    def normalize_x(self):
+        """
+        Normalize the x-axis values of the signal.
+        Returns:
+            None
+        """
+        self.x = self.x - self.x[0]
 
     def plot(self,folder,fft = False):
         """
@@ -281,7 +293,7 @@ class Run():
         units (list): List of units of the signals in the run.
     """
 
-    def __init__(self, foldername, y_offset = 0, cache = True, smoothness = 'default', fft = True):
+    def __init__(self, foldername, y_offset = 0, cache = True, smoothness = 'default', fft = True, normalize = False):
         """
         Initialize a run instance from a specified folder of .txt files.
         Parameters:
@@ -290,6 +302,7 @@ class Run():
             cache (bool, optional): If True, save the run object to cache. Default is True.
             smoothness (int, optional): The size of the window for smoothing the signals. Default is 'default'.
             fft (bool, optional): Perform FFT on the signals. Default is True.
+            normalize (bool, optional): Normalize the x-axis values of the signals to start a zero. Default is False.
         Returns:
             None
 
@@ -311,6 +324,11 @@ class Run():
             self.fft_check = True
         else:
             self.fft_check = False
+
+        if normalize:
+            self.norm = True
+        else:
+            self.norm = False
 
         try:
             if cache:
@@ -341,7 +359,7 @@ class Run():
         # Create a pool of worker processes
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the loading of signals
-            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset, fft, smoothness) for f in files]), total=len(files), desc="Loading files", file=sys.stdout))
+            results = list(tqdm(pool.imap(self.load_signal, [(f, y_offset, fft, smoothness, normalize) for f in files]), total=len(files), desc="Loading files", file=sys.stdout))
 
         # Filter out any None results (in case of errors)
         self.signals = [res for res in results if res is not None]
@@ -367,16 +385,30 @@ class Run():
         Load a signal from a file.
 
         Parameters:
-        - args (tuple): A tuple containing the file object `f`, the baseline shift `offset`, and fft.
+        - args (tuple): A tuple containing the following elements:
+            - f (Path): The path to the file.
+            - offset (float): The amount to shift the y values of the signals.
+            - fft (bool): Perform FFT on the signals.
+            - smoothness (int): The size of the window for smoothing the signals.
+            - norm (bool): Normalize the x-axis values of the signals.
 
         Returns:
         - Signal or None: The loaded signal if successful, or None if an error occurred.
         """
-        f, offset, fft, smoothness = args
+        f, offset, fft, smoothness, norm = args
         try:
-            return Signal(f, baseline_shift=offset, fft=fft, smooth_window=smoothness)
+            return Signal(f, baseline_shift=offset, fft=fft, smooth_window=smoothness, normalize=norm)
         except ValueError:
             return None
+
+    def normalize_x(self):
+        """
+        Normalize the x-axis values of the signals.
+        Returns:
+            None
+        """
+        for s in self.signals:
+            s.normalize_x()
 
     def __validate(self, cache):
         """
@@ -392,7 +424,8 @@ class Run():
                 and self.path == cache.path
                 and self.smoothness == cache.smoothness
                 and self.y_offset == cache.y_offset
-                and self.fft_check == cache.fft_check)
+                and self.fft_check == cache.fft_check
+                and self.norm == cache.norm)
 
     def get(self, index):
         """
