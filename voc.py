@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.5.0'
+__version__ = '4.6.0'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -160,20 +160,28 @@ class Signal():
         """
         self.x = self.x - self.x[0]
 
-    def plot(self,folder,fft = False):
+    def plot(self,folder,fft = False, ymin = None, ymax = None):
         """
         Generate and save a plot of the signal or its FFT.
         Parameters:
             folder (str): Directory to save the plot image. Created if it doesn't exist.
             fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
+            ymin (float, optional): Minimum value for y-axis range. Default is -400.
+            ymax (float, optional): Maximum value for y-axis range. Default is -150.
         """
+
+        if ymin is None:
+            ymin = -400
+        if ymax is None:
+            ymax = -150
+
         if fft:
             plt.plot(self.xf, np.abs(self.yf))
             plt.title('FFT: ' + self.name)
             plt.xlabel('Frequency (Hz)')
             plt.ylabel('Magnitude')
         else:
-            plt.ylim(-400 + self.y_offset,-150 + self.y_offset)
+            plt.ylim(ymin + self.y_offset, ymax + self.y_offset)
             plt.title(self.name)
             plt.xlabel('Time ' + self.units[0])
             plt.ylabel('Amplitude ' + self.units[1])
@@ -443,7 +451,7 @@ class Run():
     def __repr__(self):
         return self.name
 
-    def plot(self,folder,fft = False):
+    def plot(self,folder,fft = False, ymin = None, ymax = None):
         """
         Plot every signal in the run to a specified folder.
         Parameters:
@@ -454,7 +462,7 @@ class Run():
         """
         with multiprocessing.Pool() as pool:
             # Use pool.map to parallelize the plotting of signals and us tqdm to show progress
-            list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft) for s in self.signals]), total=len(self.signals), desc="Plotting signals", file=sys.stdout))
+            list(tqdm(pool.imap(self.plot_signals, [(s, folder, fft, ymin, ymax) for s in self.signals]), total=len(self.signals), desc="Plotting signals", file=sys.stdout))
 
     @staticmethod
     def plot_signals(args):
@@ -467,8 +475,8 @@ class Run():
             - folder: The folder path where the plot will be saved.
             - plot_fft (bool): Whether to plot the FFT of the signal or not.
         """
-        s, folder, plot_fft = args
-        s.plot(folder, fft=plot_fft)
+        s, folder, plot_fft, ymin, ymax = args
+        s.plot(folder, fft=plot_fft, ymin=ymin, ymax=ymax)
 
     def smooth(self, smoothness = None):
         """
