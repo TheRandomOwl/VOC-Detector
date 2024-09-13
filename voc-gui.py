@@ -18,7 +18,7 @@ Note: This script requires the VOC Detector CLI version executable.
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
 For: LLU Volatile Organic Compound Detector Siganl Analysis
-Date: September 07, 2024
+Date: September 2024
 GUI for the VOC Detector CLI
 
 """
