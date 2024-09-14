@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.6.0'
+__version__ = '4.6.1'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -450,6 +450,9 @@ class Run():
     # A function defining how a run object is represented when printed.
     def __repr__(self):
         return self.name
+    
+    def __len__(self):
+        return len(self.signals)
 
     def plot(self,folder,fft = False, ymin = None, ymax = None):
         """
