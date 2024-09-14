@@ -15,6 +15,7 @@ Options:
 - `--fft/--no-fft`: Use FFT instead of time-domain signal. Default is no-fft.
 - `--y-offset`: Y-axis offset for the signal. Default is 0.
 - `--threshold`: Minimum peak height for a signal to be included.
+- `--normalize/--no-normalize`: Normalize the signals to start at zero seconds. Default is no-normalize.
 
 Usage:
 python voc-cli.py [command] [options] [arguments]
