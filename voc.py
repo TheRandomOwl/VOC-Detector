@@ -166,8 +166,8 @@ class Signal():
         Parameters:
             folder (str): Directory to save the plot image. Created if it doesn't exist.
             fft (bool, optional): Plot FFT if True, time-domain signal if False. Default is False.
-            ymin (float, optional): Minimum value for y-axis range. Default is -400.
-            ymax (float, optional): Maximum value for y-axis range. Default is -150.
+            ymin (float, optional): Minimum value for y-axis range relative to y offset. Default is -400.
+            ymax (float, optional): Maximum value for y-axis range relative to y offset. Default is -150.
         """
 
         if ymin is None:
