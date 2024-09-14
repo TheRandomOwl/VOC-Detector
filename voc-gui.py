@@ -13,7 +13,7 @@ The main features of the GUI include:
 
 To use the GUI, simply run this script. The GUI window will open, and you can interact with the different elements to execute the desired CLI commands.
 
-Note: This script requires the VOC Detector CLI version executable.
+Note: This script requires version 1.0.0+ of the VOC CLI executable.
 
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
@@ -32,7 +32,7 @@ from shutil import which
 import threading
 import webbrowser
 
-VER = '0.6.11'
+VER = '0.7.0'
 SMOOTHNESS = 10
 
 
@@ -55,7 +55,7 @@ class Gui:
         self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         # Allow the window to resize
-        self.root.geometry("600x600")  # Set an initial size for the window
+        self.root.geometry("600x700")  # Set an initial size for the window
 
         # Automatically set the path to the CLI executable based on the platform
         if platform.system() == "Windows":
@@ -123,18 +123,29 @@ class Gui:
         self.smoothness_var = tk.IntVar(value=SMOOTHNESS)
         self.fft_var = tk.BooleanVar(value=False)
         self.y_offset_var = tk.DoubleVar(value=0.0)
+        self.normalize_var = tk.BooleanVar(value=False)
         self.threshold_var = tk.DoubleVar(value=float('-inf'))
+        self.max_var = tk.DoubleVar(value=float(-150))
+        self.min_var = tk.DoubleVar(value=float(-400))
 
-        tk.Checkbutton(options_frame, text="Cache", variable=self.cache_var).grid(row=0, column=0, sticky=tk.W)
-        tk.Label(options_frame, text="Smoothness:").grid(row=0, column=1, sticky=tk.E)
-        tk.Entry(options_frame, textvariable=self.smoothness_var).grid(row=0, column=2, sticky=tk.W)
+        tk.Checkbutton(options_frame, text="Cache", variable=self.cache_var).grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        tk.Label(options_frame, text="Smoothness:").grid(row=0, column=1, sticky=tk.E, padx=5, pady=5)
+        tk.Entry(options_frame, textvariable=self.smoothness_var, width=10).grid(row=0, column=2, sticky=tk.W, padx=5, pady=5)
 
-        tk.Checkbutton(options_frame, text="FFT", variable=self.fft_var).grid(row=1, column=0, sticky=tk.W)
-        tk.Label(options_frame, text="Y-Offset:").grid(row=1, column=1, sticky=tk.E)
-        tk.Entry(options_frame, textvariable=self.y_offset_var).grid(row=1, column=2, sticky=tk.W)
+        tk.Checkbutton(options_frame, text="FFT", variable=self.fft_var).grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
+        tk.Label(options_frame, text="Y-Offset:").grid(row=1, column=1, sticky=tk.E, padx=5, pady=5)
+        tk.Entry(options_frame, textvariable=self.y_offset_var, width=10).grid(row=1, column=2, sticky=tk.W, padx=5, pady=5)
 
-        tk.Label(options_frame, text="Threshold:").grid(row=2, column=1, sticky=tk.E)
-        tk.Entry(options_frame, textvariable=self.threshold_var).grid(row=2, column=2, sticky=tk.W)
+        tk.Checkbutton(options_frame, text="Start at zero", variable=self.normalize_var).grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
+
+        tk.Label(options_frame, text="Threshold:").grid(row=2, column=1, sticky=tk.E, padx=5, pady=5)
+        tk.Entry(options_frame, textvariable=self.threshold_var, width=10).grid(row=2, column=2, sticky=tk.W, padx=5, pady=5)
+
+        tk.Label(options_frame, text="Top Plot Limit:").grid(row=3, column=1, sticky=tk.E, padx=5, pady=5)
+        tk.Entry(options_frame, textvariable=self.max_var, width=10).grid(row=3, column=2, sticky=tk.W, padx=5, pady=5)
+
+        tk.Label(options_frame, text="Bottom Plot Limit:").grid(row=4, column=1, sticky=tk.E, padx=5, pady=5)
+        tk.Entry(options_frame, textvariable=self.min_var, width=10).grid(row=4, column=2, sticky=tk.W, padx=5, pady=5)
 
     def make_buttons(self):
         """Create the frame for the buttons."""
@@ -172,7 +183,8 @@ class Gui:
                          "--smoothness", str(self.smoothness_var.get()),
                          "--fft" if self.fft_var.get() else "--no-fft",
                          "--y-offset", str(self.y_offset_var.get()),
-                         "--threshold", str(self.threshold_var.get())
+                         "--threshold", str(self.threshold_var.get()),
+                         "--normalize" if self.normalize_var.get() else "--no-normalize"
                 ]
                 process = subprocess.Popen(
                     [cli_path, *flags, command, *args],
@@ -292,7 +304,7 @@ class Gui:
         if folder:
             save_dir = filedialog.askdirectory(title="Select Save Directory")
             if save_dir:
-                self.run_cli("plot", folder, save_dir)
+                self.run_cli("plot", folder, save_dir, "--top", str(self.max_var.get()), "--bottom", str(self.min_var.get()))
                 return
         messagebox.showinfo("Info", "Canceled operation.")
 
