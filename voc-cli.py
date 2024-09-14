@@ -26,7 +26,7 @@ Note: This program requires the `voc` version 4.5.0+ module to be installed.
 
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
-For: LLU Volatile Organic Compound Detector Siganl Analysis
+For: LLU Volatile Organic Compound Detector Signal Analysis
 Date: September 2024
 
 """
