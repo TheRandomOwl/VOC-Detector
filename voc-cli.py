@@ -22,7 +22,7 @@ python voc-cli.py [command] [options] [arguments]
 
 For more information on each command and its options, use the `--help` flag after the command.
 
-Note: This program requires the `voc` version 4.5.0+ module to be installed.
+Note: This program requires the `voc` version 4.6.0+ module to be installed.
 
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
