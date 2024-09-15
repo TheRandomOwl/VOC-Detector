@@ -16,7 +16,7 @@
    Download and install [Inno Setup](https://jrsoftware.org/isdl.php#stable).
 
 6. **Build Installer**:  
-   Open `VOC_GUI_Installer.iss` with Inno Setup and compile installer.
+   Open `VOC_GUI_Installer.iss` with Inno Setup and compile installer. Installer should be in a folder called `Output`
 
 # Usage Guide
 
