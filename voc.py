@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.6.4'
+__version__ = '4.6.5'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -341,27 +341,30 @@ class Run():
         else:
             self.norm = False
 
-        try:
-            if cache:
-                # Try to load the cache
-                print(f"Trying to load cache from {self.path.with_suffix('.pickle')}")
+        if cache:
+            try:
                 run_cache = _load(self.path.with_suffix('.pickle'))
 
-            # Check if the cache is valid before loading
-            if cache and self.__validate(run_cache):
-                self.signals = run_cache.signals
-                self.units = run_cache.units
-                print("Loaded run from cache")
-                return
-            if self.version != run_cache.version:
-                print(f"Cache version mismatch. Expected {self.version}, got {run_cache.version}")
-        except FileNotFoundError:
-            print("Cache not found")
-        except UnboundLocalError:
-            # Ignore if run_cache is not defined due to cache being False
-            pass
-        except Exception as e:
-            warnings.warn(f"Unable to load cache: {e}")
+                # Check if the cache is valid before loading
+                if self.__validate(run_cache):
+                    # Try to load the cache
+                    print(f"Trying to load cache from {self.path.with_suffix('.pickle')}")
+
+                    self.signals = run_cache.signals
+                    self.units = run_cache.units
+                    print("Loaded run from cache")
+                    return
+
+                if self.version != run_cache.version:
+                    print(f"Cache version mismatch. Expected {self.version}, got {run_cache.version}")
+                else:
+                    print("Specified parameters differ from cache, loading signals from files.")
+
+            except FileNotFoundError:
+                print("Cache not found")
+
+            except Exception as e:
+                warnings.warn(f"Unable to load cache: {e}")
 
 
         # Get the list of files to be processed and keep files that end with '.txt' filter out hidden files
@@ -383,12 +386,12 @@ class Run():
 
 
         # Try to save signals to cache
-        try:
-            if cache:
+        if cache:
+            try:
                 _save(self)
                 print(f"Saved cache to {self.path.with_suffix('.pickle')}")
-        except Exception as e:
-            warnings.warn(f"Unable to save cache: {e}")
+            except Exception as e:
+                warnings.warn(f"Unable to save cache: {e}")
 
     @staticmethod
     def _load_signal(args):
