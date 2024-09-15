@@ -22,7 +22,7 @@ python voc-cli.py [command] [options] [arguments]
 
 For more information on each command and its options, use the `--help` flag after the command.
 
-Note: This program requires the `voc` version 4.6.0+ module to be installed.
+Note: This program requires the `voc` version 4.6.1+ module to be installed.
 
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
@@ -34,9 +34,10 @@ Date: September 2024
 import multiprocessing
 from pathlib import Path
 import click
+import numpy as np
 import voc
 
-VER = '1.0.0'
+VER = '1.0.1'
 API = voc.VER
 
 # Main CLI
@@ -111,6 +112,19 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
 
     run1 = voc.Run(folder_a, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
     run2 = voc.Run(folder_b, cache=ctx.obj['cache'], smoothness=ctx.obj['smoothness'], y_offset=ctx.obj['y_offset'], fft=ctx.obj['fft'], normalize=ctx.obj['norm'])
+
+    # Warn the user of potential issues
+    if len(run1.get(0).x) != len(run2.get(0).x):
+        click.echo("Warning: The runs have different signal lengths. Comparison may be invalid", err=True)
+
+    if len(run1) != len(run2):
+        click.echo(f"Warning: The runs have a different amount of signals. {run1}: {len(run1)}, {run2}: {len(run2)}", err=True)
+
+    if len(run1.get(0).x) == len(run2.get(0).x) and not np.allclose(run1.get(0).x, run2.get(0).x, atol=3e-2, rtol=1e-5):
+        click.echo("Warning: The runs may not align with each other. Try using --normalize to fix this.", err=True)
+        click.echo(f"Run 1: {run1.get(0).x}", err=True)
+        click.echo(f"Run 2: {run2.get(0).x}", err=True)
+
     if ctx.obj['min'] is not None:
         run1.clean_empty(ctx.obj['min'])
         run2.clean_empty(ctx.obj['min'])
