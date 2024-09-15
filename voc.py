@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.6.1'
+__version__ = '4.6.2'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -450,7 +450,7 @@ class Run():
     # A function defining how a run object is represented when printed.
     def __repr__(self):
         return self.name
-    
+
     def __len__(self):
         return len(self.signals)
 
@@ -766,7 +766,12 @@ def corr_coef(run1, run2):
     """
     _, y1 = run1.avg_signal()
     _, y2 = run2.avg_signal()
-    return np.corrcoef(y1, y2)[0, 1]
+
+    # if the signals are of different lengths, return nan
+    try:
+        return np.corrcoef(y1, y2)[0, 1]
+    except ValueError:
+        return float('nan')
 
 def _export(filepath, *lists, header = None):
     """
