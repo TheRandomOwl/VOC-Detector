@@ -37,7 +37,7 @@ import click
 import numpy as np
 import voc
 
-VER = '1.0.1'
+VER = '1.0.2'
 API = voc.VER
 
 # Main CLI
@@ -89,11 +89,11 @@ def average(ctx, folder, save_dir, method):
         signals.clean_empty(ctx.obj['min'])
 
     if method in ['area', 'all']:
-        click.echo(f"Area of {signals.name}: {signals.avg_area()} {signals.units[0]}*{signals.units[1]}")
+        click.echo(f"Area of {signals}: {signals.avg_area()} {signals.units[0]}*{signals.units[1]}")
     if method in ['max', 'all']:
-        click.echo(f"Max of {signals.name}: {signals.avg_max()} {signals.units[1]}")
+        click.echo(f"Max of {signals}: {signals.avg_max()} {signals.units[1]}")
     if method in ['average', 'all']:
-        click.echo(f"Average voltage of {signals.name}: {signals.avg_voltage()} {signals.units[1]}")
+        click.echo(f"Average voltage of {signals}: {signals.avg_voltage()} {signals.units[1]}")
     if method in ['plot', 'all']:
         signals.plot_average_signal(save_dir, fft=ctx.obj['fft'])
         if save_dir is not None:
@@ -130,14 +130,14 @@ def compare(ctx, folder_a, folder_b, save_dir, method):
         run2.clean_empty(ctx.obj['min'])
 
     if method in ['avg-area', 'all']:
-        click.echo(f"Area of {run1.name}: {run1.avg_area()} {run1.units[0]}*{run1.units[1]}")
-        click.echo(f"Area of {run2.name}: {run2.avg_area()} {run2.units[0]}*{run2.units[1]}")
+        click.echo(f"Area of {run1}: {run1.avg_area()} {run1.units[0]}*{run1.units[1]}")
+        click.echo(f"Area of {run2}: {run2.avg_area()} {run2.units[0]}*{run2.units[1]}")
     if method in ['avg-max', 'all']:
-        click.echo(f"Max of {run1.name}: {run1.avg_max()} {run1.units[1]}")
-        click.echo(f"Max of {run2.name}: {run2.avg_max()} {run2.units[1]}")
+        click.echo(f"Max of {run1}: {run1.avg_max()} {run1.units[1]}")
+        click.echo(f"Max of {run2}: {run2.avg_max()} {run2.units[1]}")
     if method in ['average', 'all']:
-        click.echo(f"Average voltage of {run1.name}: {run1.avg_voltage()} {run1.units[1]}")
-        click.echo(f"Average voltage of {run2.name}: {run2.avg_voltage()} {run2.units[1]}")
+        click.echo(f"Average voltage of {run1}: {run1.avg_voltage()} {run1.units[1]}")
+        click.echo(f"Average voltage of {run2}: {run2.avg_voltage()} {run2.units[1]}")
     if method in ['correlation', 'all']:
         click.echo(f"Correlation coefficient: {voc.corr_coef(run1,run2)}")
     if method in ['avg-plot', 'all']:
