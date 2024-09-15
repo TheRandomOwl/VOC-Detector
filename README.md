@@ -37,8 +37,8 @@
 
 **Operations**:
 - **Plot Signals**: Plot all signals from the selected folder and save them to the specified directory. Options inclue setting top and bottom plot limits.
-- **Show Avg Signal**: Display the average signal for the selected folder, analyzing all available methods.
-- **Compare Runs**: Compare signals from two different folders using all available methods.
+- **Show Avg Signal**: Display the average signal for the selected folder, analyzing it with all available methods.
+- **Compare Runs**: Compare average signals from two different runs using all available methods.
 - **Export to CSV**: Export signals to CSV files (single or multiple), including the option to export average signals.
 - **Show Version Info**: Display the version information of the GUI and VOC CLI.
 - **Cancel Process**: Cancel the current running process.
@@ -46,29 +46,29 @@
 
 **Example Usage**:
 1. **Plot Signals**:
-   - Select the folder containing the data.
-   - Choose a directory to save the plotted signals.
    - Optionally, set top and bottom plot limits.
    - Click "Plot Signals."
-
-2. **Show Average Signal**:
    - Select the folder containing the data.
-   - Click "Show Avg Signal" to analyze the signal using all available methods.
+   - Choose a directory to save the plotted signals.
 
-3. **Compare Runs**:
+3. **Show Average Signal**:
+   - Click "Show Avg Signal" to analyze the average signal using all available methods.
+   - Select the folder containing the data.
+
+4. **Compare Runs**:
+   - Click "Compare Runs" to compare signals using all available methods.
    - Select folders for Folder A and Folder B.
    - Choose a directory to save the comparison plot.
-   - Click "Compare Runs" to compare signals using all available methods.
 
-4. **Export to CSV**:
+5. **Export to CSV**:
+   - Click "Export to one CSV" or "Export to multiple CSVs," or "Export Average to CSV".
    - Select the folder containing the data.
    - Choose a directory to save the CSV files.
-   - Click "Export to one CSV" or "Export to multiple CSVs," or export the average signal.
 
-5. **Show Version Info**:
+6. **Show Version Info**:
    - Click "Show Version Info" to display the current version of the GUI and VOC CLI.
 
-6. **Cancel Process**:
+7. **Cancel Process**:
    - Click "Cancel Process" to stop any running command.
 
 ## VOC-CLI
@@ -101,7 +101,7 @@ Analyze the average signal for a run. Only the plot method works with FFT.
 - **Options**:
   - `--save-dir DIRECTORY`            Directory to save the average plot. Optional.
   - `--method [plot|area|max|average|all]`  Method to analyze signals. Default is plot.
-  - `--help`                          Show this message and exit.
+  - `--help`                          Show help message and exit.
 - **Example**:
    ```
    voc-cli.py average --save-dir results/average_plot --method area data/run1
