@@ -22,7 +22,7 @@ python voc-cli.py [command] [options] [arguments]
 
 For more information on each command and its options, use the `--help` flag after the command.
 
-Note: This program requires the `voc` version 4.6.1+ module to be installed.
+Note: This program requires the `voc` version 4.6.4+ module to be installed.
 
 Author: Nathan Perry
 Supervisor: Dr. Reinhard Schulte
@@ -37,7 +37,7 @@ import click
 import numpy as np
 import voc
 
-VER = '1.0.2'
+VER = '1.0.3'
 API = voc.VER
 
 # Main CLI
@@ -172,7 +172,7 @@ def export(ctx, data, save_path, method, save_as):
             signals.export_avg(save_path, fft=ctx.obj['fft'])
             click.echo(f"Exported average signals to: {save_path}")
         elif method == 'raw':
-            signals.export_all(save_path, fft=ctx.obj['fft'])
+            signals.export_single(save_path, fft=ctx.obj['fft'])
             click.echo(f"Exported signals to: {save_path}")
 
 if __name__ == '__main__':
