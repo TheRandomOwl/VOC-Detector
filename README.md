@@ -1,7 +1,7 @@
 # Build `voc-gui` and `voc-cli` for Windows
 
 1. **Install Python**:  
-   Download and install Python from [python.org](https://www.python.org/).
+   Download and install Python from [python.org](https://www.python.org/downloads/).
 
 2. **Add Python to PATH**:  
    During installation, ensure that you select the option to "Add python.exe to PATH."
