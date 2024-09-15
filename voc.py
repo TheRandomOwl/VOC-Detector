@@ -24,7 +24,7 @@ Modified by: Nathan Perry and Nathan Fisher
 
 '''
 
-__version__ = '4.6.3'
+__version__ = '4.6.4'
 
 # These statements import the libraries needed for the code to run
 import csv  # A library for reading and writing csv files
@@ -38,6 +38,9 @@ import matplotlib.pyplot as plt  # A library for generating plots
 import numpy as np  # A library with useful data storage structures and mathematical operations
 from scipy.integrate import trapezoid  # A library for numerical integration
 from tqdm import tqdm  # A library for progress bars
+
+# Show all deprecation warnings
+warnings.simplefilter(action='always', category=DeprecationWarning)
 
 VER = __version__
 
@@ -543,7 +546,15 @@ class Run():
         s.export(filepath, fft)
         return s
 
-    def export_all(self, filepath, fft = False, unique = True):
+    def export_all(self, *args, **kwargs):
+        """
+        Deprecated function. Use export_single() instead.
+        """
+        warnings.warn("The export_all() function is deprecated. Use export_single() instead.", DeprecationWarning)
+
+        self.export_single(*args, **kwargs)
+
+    def export_single(self, filepath, fft = False, unique = True):
         """
         Export all signals in the run to a single file.
         Parameters:
@@ -554,6 +565,7 @@ class Run():
         Returns:
             None
         """
+
         filepath = Path(filepath)
         if filepath.is_dir():
             filepath = filepath / (self.name + '.csv')
