@@ -58,7 +58,6 @@
 4. **Compare Runs**:
    - Click "Compare Runs" to compare signals using all available methods.
    - Select folders for Folder A and Folder B.
-   - Choose a directory to save the comparison plot.
 
 5. **Export to CSV**:
    - Click "Export to one CSV" or "Export to multiple CSVs," or "Export Average to CSV".
